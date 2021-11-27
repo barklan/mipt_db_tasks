@@ -3,6 +3,127 @@
 */
 
 /*markdown
+**1.**
+*/
+
+SELECT TOP(10)
+    *
+FROM
+    distributor.singleSales
+WHERE
+    branchName = 'Екатеринбург' and
+    dateId between '2011-05-29' and '2011-05-31'
+
+/*markdown
+**2.**
+*/
+
+SELECT TOP(10)
+    fullname,
+    salesRub,
+    sales,
+    itemId
+FROM
+    distributor.singleSales
+
+/*markdown
+**3.**
+*/
+
+SELECT
+    min(salesRub) as min,
+    max(salesRub) as max
+FROM
+    distributor.singleSales
+
+/*markdown
+**4.**
+*/
+
+SELECT
+    fullname,
+    salesRub,
+    month(dateId)
+FROM
+    distributor.singleSales
+WHERE
+    sales = (
+        SELECT
+            MAX(sales) 
+        FROM
+            distributor.singleSales
+        WHERE
+            month(dateId) = 2
+)
+
+/*markdown
+**5.**
+*/
+
+SELECT
+    COUNT(DISTINCT checkId) AS checks
+FROM
+    distributor.sales
+
+/*markdown
+**6.**
+*/
+
+SELECT
+    COUNT(DISTINCT checkId) AS checks
+FROM
+    distributor.sales
+WHERE
+    salesRub >= 10000
+
+/*markdown
+**7.**
+*/
+
+-- TODO (or not)
+
+/*markdown
+**8-11.** Отсортировать...
+*/
+
+-- ORDER BY ...
+
+/*markdown
+**12-13.** Получить информацию о транзакции с максимальной суммой платежа, ...
+*/
+
+SELECT TOP(10)
+*
+FROM
+    distributor.singleSales 
+WHERE
+    region='Самарская область' and
+    salesRub = (
+        SELECT
+            MAX(salesRub) 
+        FROM
+            distributor.singleSales 
+        WHERE
+            region='Самарская область'
+    )
+
+/*markdown
+**14.** Переименовать красиво все наименования столбцов ...
+*/
+
+-- AS ...
+
+/*markdown
+**15-17.** Посчитать количество уникальных менеджеров со следующими условиями...
+*/
+
+SELECT
+    COUNT(distinct salesManagerId) as num
+FROM
+    distributor.salesManager
+-- WHERE ... 
+
+/*markdown
 **18.** Сколько в среднем обслуживает клиентов менеджер филиала.
 */
 
@@ -127,7 +248,6 @@ WITH sms(managerId, numberOfBranches) AS (
         sm.salesManagerId
     HAVING COUNT(DISTINCT branch.branchId) > 1
 )
-
 SELECT TOP(10)
     managerId,
     numberOfBranches,
