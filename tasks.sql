@@ -186,37 +186,34 @@ WHERE
 **v2**
 */
 
+WITH temp(branch, fullname, checks) as (
+    SELECT
+        branchName
+        fullname,
+        count(checkId)
+    FROM
+        distributor.singleSales
+    WHERE
+        fullname IS NOT NULL
+    GROUP BY
+        branchName,
+        fullname
+)
 SELECT
-    branchName,
-    fullname
-    count(checkId)
+    branch,
+    fullname,
+    checks
 FROM
-    distributor.singleSales
+    temp
 WHERE
-    fullname IS NOT NULL and
-    count(checkId) = (
+    checks = (
         SELECT
-            max(temp.countMan)
+            max(checks)
         FROM
-            (
-                SELECT
-                    branchName,
-                    fullname,
-                    count(checkId) as countMan
-                FROM
-                    distributor.singleSales
-                WHERE
-                    fullname IS NOT NULL
-                GROUP BY
-                    branchName,
-                    fullname
-            ) temp
+            temp
         GROUP BY
-            temp.branchName
+            branch
     )
-GROUP BY
-    branchName,
-    fullname
 
 /*markdown
 **21**. Какой менеджер, принес максимальную выручку в филиале за определенный месяц
@@ -334,6 +331,65 @@ SELECT
 from tmp
 
 /*markdown
+**28.**
+*/
+
+SELECT
+    avg(n) as average
+FROM
+    (
+        SELECT
+            COUNT(itemId) as n,
+            checkId
+        FROM
+            distributor.singleSales
+        GROUP BY
+            checkId
+    ) as s
+
+/*markdown
+**29.**
+*/
+
+SELECT
+    a.companyName,
+    avg(n) as average
+FROM
+    (
+        SELECT
+            COUNT(itemId) as n,
+            checkId,
+            companyName
+        FROM
+            distributor.singleSales
+        WHERE
+            salesRub < 3000 and
+            companyName IS NOT NULL
+        GROUP BY
+            checkId,
+            companyName
+    ) as a
+GROUP BY
+    a.companyName
+ORDER BY
+    a.companyName
+
+/*markdown
+**31.**
+*/
+
+SELECT
+    fullname,
+    COUNT(companyName) as countc
+FROM
+    distributor.singleSales
+GROUP BY
+    fullname
+HAVING
+    COUNT(companyName) > 50 and
+    fullname IS NOT NULL
+
+/*markdown
 **32.** 
 */
 
@@ -360,6 +416,76 @@ FROM
     sms
 INNER JOIN
     distributor.salesManager on (sms.managerId = salesManager.salesManagerId)
+
+/*markdown
+**33.**
+*/
+
+SELECT
+    DISTINCT fullname,
+    floor(sum(salesRub * sales)) as summ
+FROM
+    distributor.singleSales
+GROUP BY
+    fullname
+HAVING
+    fullname IS NOT NULL
+
+/*markdown
+**34.**
+*/
+
+SELECT top(10)
+    s.itemId,
+    dateId,
+    yearId,
+    monthId
+FROM
+    distributor.singleSales s
+JOIN
+    distributor.ddp a on s.itemId = a.itemId
+GROUP BY
+    s.itemId,
+    dateId,
+    yearId,
+    monthId
+
+/*markdown
+**35.**
+*/
+
+SELECT
+    avg(n) as average
+FROM
+    (
+        SELECT
+            COUNT(DISTINCT checkId) as n
+        FROM
+            distributor.singleSales
+    ) as s
+SELECT
+    COUNT(itemId) as avgTxn
+FROM
+    distributor.singleSales
+
+/*markdown
+**36.**
+*/
+
+SELECT
+    COUNT(DISTINCT account) as accounts
+FROM
+    (
+        SELECT
+            checkId,
+            sum(sales * salesRub) as account
+        FROM
+            distributor.singleSales
+        GROUP BY
+            checkId
+        HAVING
+            COUNT(sales) > 2
+    ) as s
 
 /*markdown
 # Task 2
