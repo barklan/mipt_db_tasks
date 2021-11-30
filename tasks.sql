@@ -503,3 +503,74 @@ group by
     distributor.singleSales.companyName, 
     YEAR(distributor.singleSales.dateId),
     MONTH(distributor.singleSales.dateId)
+
+/*markdown
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```
+*/
+
+with temp1(month, sales) as (
+    SELECT
+        month(distributor.singleSales.dateId) as month,
+        count(distributor.singleSales.itemId)
+    FROM
+        distributor.singleSales
+    INNER JOIN
+        distributor.item i on singleSales.itemId = i.itemId
+    WHERE
+        i.exclusive = 'Да' and
+        singleSales.category = 'Обои'
+    GROUP BY
+        year(distributor.singleSales.dateId),
+        month(distributor.singleSales.dateId)
+),
+temp2(month, sales) as (
+    SELECT
+        month(distributor.singleSales.dateId),
+        count(distributor.singleSales.itemId)
+    FROM
+        distributor.singleSales
+    INNER JOIN
+        distributor.item i on singleSales.itemId = i.itemId
+    WHERE
+        singleSales.category = 'Обои'
+    GROUP BY
+        year(distributor.singleSales.dateId),
+        month(distributor.singleSales.dateId)
+)
+select
+    (cast(temp1.sales as float) / cast(temp2.sales as float)) as boom
+FROM
+    temp1
+INNER JOIN
+    temp2 on temp1.month = temp2.month
