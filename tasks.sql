@@ -505,38 +505,7 @@ group by
     MONTH(distributor.singleSales.dateId)
 
 /*markdown
-```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-```
+**27.**
 */
 
 with temp1(month, sales) as (
