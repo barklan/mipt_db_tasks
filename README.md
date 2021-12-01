@@ -1,7 +1,4 @@
 # mipt_db_tasks
 
-bomsdfsf
-sdfsdf
-
-
-dsfsdf
+### The best answers for the best tasks from DB Course Teacher
+## Welcome
