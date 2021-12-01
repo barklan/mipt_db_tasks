@@ -49,7 +49,7 @@ FROM
 WHERE
     sales = (
         SELECT
-            MAX(sales) 
+            MAX(sales)
         FROM
             distributor.singleSales
         WHERE
@@ -95,14 +95,14 @@ WHERE
 SELECT TOP(10)
 *
 FROM
-    distributor.singleSales 
+    distributor.singleSales
 WHERE
     region='Самарская область' and
     salesRub = (
         SELECT
-            MAX(salesRub) 
+            MAX(salesRub)
         FROM
-            distributor.singleSales 
+            distributor.singleSales
         WHERE
             region='Самарская область'
     )
@@ -131,7 +131,7 @@ SELECT
     region,
     COUNT(DISTINCT checkId) / COUNT(DISTINCT fullname)
 FROM
-    distributor.singleSales 
+    distributor.singleSales
 WHERE
     fullname IS NOT NULL
 GROUP BY
@@ -223,7 +223,7 @@ SELECT TOP(10)
     max(salesRub) as maxSalesRub,
     salesManagerId
 FROM
-    distributor.sales 
+    distributor.sales
 WHERE
     branchId = 4 AND
     month(dateId) = 8
@@ -500,7 +500,7 @@ SELECT TOP(10)
 FROM
     distributor.singleSales
 group by
-    distributor.singleSales.companyName, 
+    distributor.singleSales.companyName,
     YEAR(distributor.singleSales.dateId),
     MONTH(distributor.singleSales.dateId)
 
@@ -543,3 +543,60 @@ FROM
     temp1
 INNER JOIN
     temp2 on temp1.month = temp2.month
+
+
+/*markdown
+**26.** Вывести долю занимающих в продажах, различных фабрик.
+  Если в товаре фабрика не указана, сделать замену на «иные» и так же вывести в долях.
+  Нужно вывести как за весь период, так и в разрезе Год – Месяц (или дата начало месяца)
+
+ */
+--
+
+-- For the whole time
+with doli(dolya_item, fabrica) as (
+    SELECT sum(quantity) as dolya_item, fabrica
+             FROM (
+                      SELECT s.itemId,
+                             count(s.itemId) as quantity,
+                             fabrica
+                      FROM distributor.item i
+                               INNER JOIN distributor.sales s on i.itemId = s.itemId
+                          GROUP BY fabrica, s.itemId
+                  ) as tmp
+             GROUP BY fabrica
+)
+SELECT
+    cast(dolya_item as float) / cast(
+        (SELECT sum(dolya_item) from doli) as float
+        ) as dolya, fabrica
+FROM
+    doli
+GROUP BY
+    dolya_item, fabrica;
+
+-- This is for Year/Month
+with doli(dolya_item, fabrica, year, month) as (
+    SELECT sum(quantity) as dolya_item, fabrica, year, month
+             FROM (
+                      SELECT
+                             year(s.dateId) as year,
+                             month(s.dateId) as month,
+                             s.itemId,
+                             count(s.itemId) as quantity,
+                             fabrica
+                      FROM distributor.item i
+                             INNER JOIN distributor.sales s on i.itemId = s.itemId
+                      GROUP BY year(s.dateId), month(s.dateId), fabrica, s.itemId
+                  ) as tmp
+             GROUP BY year, month, fabrica
+)
+
+SELECT
+    cast(dolya_item as float) / cast(
+        (SELECT sum(dolya_item) from doli) as float
+        ) as dolya, fabrica
+FROM
+    doli
+GROUP BY
+    year, month, dolya_item, fabrica;
