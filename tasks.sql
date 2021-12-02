@@ -963,8 +963,11 @@ allBrands(year, month, allSales) as (
         year(dateId),
         month(dateId)
 )
-SELECT
-    *,
+SELECT TOP(10)
+    allBrands.year,
+    allBrands.month,
+    allSales,
+    topThreeSum,
     topThreeSum / allSales as ratio
 FROM
     allBrands
