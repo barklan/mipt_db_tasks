@@ -908,19 +908,51 @@ WHERE
 **16.** Определить долю вклада Топ 3 брендов в выручку компании для каждого года и месяца.
 */
 
-with base(year, month, brand, brandSales, brandRank) as (
+with topThreeBrands(year, month, topThreeSum) as (
+    SELECT
+        temp.year,
+        temp.month,
+        sum(temp.sum)
+    FROM
+        (
+            SELECT
+                year(dateId) as 'year',
+                month(dateId) as 'month',
+                brand,
+                -- Сумма для каждого бренда сгруппированная по Год-Месяц
+                sum(salesRub) as 'sum',
+                -- Ранг бренда в группе Год-Месяц в зависимости от продаж
+                -- (1 - бренд с наибольшими продажами в данной группе)
+                row_number() OVER (
+                    partition by
+                        year(dateId),
+                        month(dateId)
+                    ORDER BY
+                        sum(salesRub) DESC
+                ) as 'brandRank'
+            FROM
+                distributor.sales
+            INNER JOIN
+                distributor.item on (sales.itemId = item.itemId)
+            WHERE
+                companyId = 7322 -- ! we are doing it only for this company
+            GROUP BY
+                year(dateId),
+                month(dateId),
+                brand
+        ) as temp
+    WHERE
+        temp.brandRank <= 3
+    GROUP BY
+        temp.year,
+        temp.month
+),
+allBrands(year, month, allSales) as (
     SELECT
         year(dateId),
         month(dateId),
-        brand,
-        sum(salesRub),
-        row_number() OVER (
-            partition by
-                year(dateId),
-                month(dateId)
-            ORDER BY
-                sum(salesRub) DESC
-        ) brandRank
+        -- Сумма для всех брендов сгруппированная по Год-Месяц
+        sum(salesRub)
     FROM
         distributor.sales
     INNER JOIN
@@ -929,23 +961,22 @@ with base(year, month, brand, brandSales, brandRank) as (
         companyId = 7322 -- ! we are doing it only for this company
     GROUP BY
         year(dateId),
-        month(dateId),
-        brand
-),
-temp2(year, month, brand, brandSales, brandRank) as (
-    SELECT
-        'year',
-        'month',
-        brand,
-        sum(brandSales),
-        brandRank
-    FROM
-        base
+        month(dateId)
 )
 SELECT
-    *
+    *,
+    topThreeSum / allSales as ratio
 FROM
-    temp2
+    allBrands
+INNER JOIN
+    -- В обоих CTE мы группируем по Год-Месяц.
+    -- Дуплицированных записей быть не должно.
+    topThreeBrands on (
+        allBrands.year = topThreeBrands.year and
+        allBrands.month = topThreeBrands.month
+    )
+WHERE
+    allSales != 0
 
 /*markdown
 **17.** Построить динамику изменения неликвидного товара по месяцам и по всем годам. Под неликвидом считается товар, который не продавался более 180 дней от текущей даты. Т. к. мы смотрим в динамике по месяцам, то для каждого месяца будет своя текущая дата, например, первый день месяца.
