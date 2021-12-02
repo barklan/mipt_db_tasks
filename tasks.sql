@@ -121,7 +121,7 @@ SELECT
     COUNT(distinct salesManagerId) as num
 FROM
     distributor.salesManager
--- WHERE ... 
+-- WHERE ...
 
 /*markdown
 **18.** Сколько в среднем обслуживает клиентов менеджер филиала.
@@ -390,7 +390,7 @@ HAVING
     fullname IS NOT NULL
 
 /*markdown
-**32.** 
+**32.**
 */
 
 WITH sms(managerId, numberOfBranches) AS (
@@ -500,9 +500,9 @@ FROM
 */
 
 SELECT TOP(5)
-    companyName,  
-    YEAR(dateId) AS год, 
-    MONTH(dateId) AS месяц, 
+    companyName,
+    YEAR(dateId) AS год,
+    MONTH(dateId) AS месяц,
     SUM(salesRub) AS выручка
 FROM
     distributor.singleSales
@@ -518,8 +518,8 @@ ORDER BY
 **2.** Рассчитать выручку компании в разрезе: Дата начало месяца – Выручка компании. Представление данных отсортировать: Дата начало месяца. В чем ключевое отличие от задачи №1?
 */
 
-SELECT TOP(5) companyName,  
-               YEAR(dateId) AS год, 
+SELECT TOP(5) companyName,
+               YEAR(dateId) AS год,
                MONTH(dateId) AS месяц,
                SUM(salesRub) AS выручка
 FROM
@@ -567,7 +567,7 @@ ORDER BY
 */
 
 SELECT TOP(5)
-    companyName,  
+    companyName,
     DateName(
         month,
         DateAdd(
@@ -592,9 +592,7 @@ ORDER BY
 - Очень давно не покупали – не было покупок более 365 дней от текущей даты
 - Давно не покупали – не было покупок более 180 дней от текущей даты
 - Не покупали – не было покупок более 90 дней от текущей даты
-
 Текущею дату задать следующим образом: система должна брать существующею сегодня дату и смещать ее на 8 лет назад.
-
 */
 
 DECLARE @start datetime;
@@ -662,17 +660,16 @@ SELECT TOP(10)
 FROM
     temp
 
-
 /*markdown
 **6.** Рассчитать выручку компании в разрезе: Год – Квартал – Выручка компании. Представленные данные отсортировать: Год, Квартал.
 */
 
 SELECT TOP(5)
-    companyName,  
+    companyName,
     YEAR(dateId) AS 'year',
     DATEPART(QUARTER, dateId) as 'q',
     SUM(salesRub) AS 'sales'
-FROM 
+FROM
     distributor.singleSales
 group by
     companyName,
@@ -687,11 +684,11 @@ ORDER BY
 */
 
 SELECT TOP(5)
-    companyName,  
+    companyName,
     YEAR(dateId) AS 'year',
     DATEPART(weekday, dateId) as 'day',
     SUM(salesRub) AS 'sales'
-FROM 
+FROM
     distributor.singleSales
 GROUP BY
     companyName,
@@ -725,20 +722,20 @@ SELECT
 */
 
 SELECT
-    distinct top(5) fullname, 
+    distinct top(5) fullname,
     SUBSTRING(
         fullname,
-        1, 
+        1,
         CHARINDEX(' ', fullname) - 1
-    ) AS 'surname',     
+    ) AS 'surname',
     SUBSTRING(
         fullname,
         CHARINDEX(' ', fullname) + 1,
         LEN(fullname) - CHARINDEX(' ', fullname)
     ) AS 'name',
     SUBSTRING(
-        fullname, 
-        1, 
+        fullname,
+        1,
         CHARINDEX(' ', fullname) + 1
     ) + '.' AS 'surnameWithInitial'
 FROM
@@ -782,7 +779,7 @@ ORDER BY
 **11.** В таблицу: distributor.remains представлена информация об остатках, как : Филиал – Артикул товара – Дата – Остаток – СвободныйОстаток. Особенность заполнения данной таблицы, что если остаток на какую-то дату нулевой (для товара и филиала), то в таблицу он не заноситься, например: 2020-01-01 – 10шт., 2020-01-02 – 7шт. 2020-01-04 – 15 шт. Необходимо, восстановить пропуски в данной таблицы и дописать пропущенные значения. Из нашего примера: 2020-01-03 – 0 шт. Учтите, что даты складирования товара – филиала своя.
 */
 
-SELECT TOP(10) 
+SELECT TOP(10)
     *
 FROM
     distributor.remains
@@ -803,7 +800,7 @@ set @start180 = (
             -180,
             @start
         )
-); 
+);
 with temp(itemId, mostRecentDateWhenItemWasSold) as (
     SELECT
         itemId,
@@ -838,7 +835,6 @@ SELECT
     ) as 'Number of non-liquid items'
 FROM
     temp
-    
 
 /*markdown
 **13.** Определить топ 3 лучших товаров по выручки для каждого Бренда без учета времени, т. е. за всю историю работы компании.
@@ -912,11 +908,19 @@ WHERE
 **16.** Определить долю вклада Топ 3 брендов в выручку компании для каждого года и месяца.
 */
 
-with temp(brand, brandSales, brandRank) as (
+with temp(year, month, brand, brandSales, brandRank) as (
     SELECT
+        year(dateId),
+        month(dateId),
         brand,
         sum(salesRub),
-        RANK() OVER (ORDER BY sum(salesRub) DESC) brandRank
+        RANK() OVER (
+            partition by
+                year(dateId),
+                month(dateId)
+            ORDER BY
+                sum(salesRub) DESC
+        ) brandRank
     FROM
         distributor.sales
     INNER JOIN
@@ -924,25 +928,40 @@ with temp(brand, brandSales, brandRank) as (
     WHERE
         companyId = 7322 -- ! we are doing it only for this company
     GROUP BY
+        year(dateId),
+        month(dateId),
         brand
 )
 SELECT
-    sum(brandSales) / (
+    (
         SELECT
             sum(brandSales)
         FROM
             temp
-    )
+        WHERE
+            brandRank <= 3
+        GROUP BY
+            'year',
+            'month'
+    ) /
+    sum(brandSales)
+    -- sum(brandSales) / (
+    --     SELECT
+    --         sum(brandSales)
+    --     FROM
+    --         temp
+    -- )
 FROM
     temp
-WHERE
-    brandRank <= 3
+GROUP BY
+    'year',
+    'month'
 
 /*markdown
 **17.** Построить динамику изменения неликвидного товара по месяцам и по всем годам. Под неликвидом считается товар, который не продавался более 180 дней от текущей даты. Т. к. мы смотрим в динамике по месяцам, то для каждого месяца будет своя текущая дата, например, первый день месяца.
 */
 
-
+-- todo
 
 /*markdown
 **26.** Вывести долю занимающих в продажах, различных фабрик.
