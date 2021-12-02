@@ -717,24 +717,59 @@ WHERE
 **9.** Найдите все компании, у которых в наименование в начале стоит «ООО», без учета регистра и пробелов вначале.
 */
 
+--How the fuck am I supposed to do that without regex?
 SELECT TOP(5)
     companyName
 FROM
     distributor.singleSales
 WHERE
-    companyName like '[ ]*ООО%'
+    companyName like '[ ]ООО%'
     -- companyName REGEXP '^[[:space:]]*ооо%'
     -- companyName like '%ООО%'
 
+/*markdown
+**10.** Необходимо разделить ФИ, что записаны в столбеце «fullName» на три столбца, выделив отдельно фамилию, имя и фамилия И.
+*/
 
+SELECT
+    distinct top(5) fullname, 
+    SUBSTRING(
+        fullname,
+        1, 
+        CHARINDEX(' ', fullname) - 1
+    ) AS 'surname',     
+    SUBSTRING(
+        fullname,
+        CHARINDEX(' ', fullname) + 1,
+        LEN(fullname) - CHARINDEX(' ', fullname)
+    ) AS 'name',
+    SUBSTRING(
+        fullname, 
+        1, 
+        CHARINDEX(' ', fullname) + 1
+    ) + '.' AS 'surnameWithInitial'
+FROM
+    distributor.singleSales
+WHERE
+    fullname is not Null
 
 /*markdown
 ### Part 2 (sales)
 */
 
 /*markdown
-
+**1.** Рассчитать выручку компании в разрезе: Год – Месяц – Филиал – Выручка компании. Представленные данные отсортировать: Филиал, Год, Месяц.
 */
+
+SELECT
+    branchName,
+    year(dateId),
+    month(dateId),
+    salesRub
+FROM
+    distributor.sales
+INNER JOIN
+    distributor.
 
 /*markdown
 **26.** Вывести долю занимающих в продажах, различных фабрик.
