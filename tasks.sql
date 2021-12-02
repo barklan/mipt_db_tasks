@@ -492,17 +492,302 @@ FROM
 */
 
 /*markdown
+### Part 1 (singleSales)
+*/
+
+/*markdown
 **1.** Рассчитать выручку компании в разрезе: Год – Месяц – Выручка компании. Представленные данные отсортировать: Год, Месяц
 */
 
-SELECT TOP(10)
-    SUM(distributor.singleSales.salesRub)
+SELECT TOP(5)
+    companyName,  
+    YEAR(dateId) AS год, 
+    MONTH(dateId) AS месяц, 
+    SUM(salesRub) AS выручка
 FROM
     distributor.singleSales
+GROUP BY
+    companyName,
+    YEAR(dateId),
+    MONTH(dateId)
+ORDER BY
+    YEAR(dateId),
+    MONTH(dateId);
+
+/*markdown
+**2.** Рассчитать выручку компании в разрезе: Дата начало месяца – Выручка компании. Представление данных отсортировать: Дата начало месяца. В чем ключевое отличие от задачи №1?
+*/
+
+SELECT TOP(5) companyName,  
+               YEAR(dateId) AS год, 
+               MONTH(dateId) AS месяц,
+               SUM(salesRub) AS выручка
+FROM
+    distributor.singleSales
+
+WHERE DAY(dateId) = 1
 group by
-    distributor.singleSales.companyName,
-    YEAR(distributor.singleSales.dateId),
-    MONTH(distributor.singleSales.dateId)
+    companyName,
+    YEAR(dateId),
+    MONTH(dateId)
+ORDER BY YEAR(dateId),
+         MONTH(dateId);
+
+/*markdown
+**3.** Для каждой компании рассчитать среднее время между покупками, отдельно показать результат в днях и в месяцах.
+*/
+
+with temp(company, mn, mx, num) as (
+    SELECT
+        companyName,
+        min(dateId),
+        max(dateId),
+        count(distinct checkId)
+    FROM
+        distributor.singleSales
+    WHERE
+        companyName IS NOT NULL
+    GROUP BY
+        companyName
+)
+select top(5)
+    company,
+    (datediff(month, mn, mx) / (num - 1)) as 'months',
+    (datediff(day, mn, mx) / (num - 1)) as 'days'
+FROM
+    temp
+where
+    num - 1 != 0
+ORDER BY
+    months desc,
+    days desc
+
+/*markdown
+**4.** Вывести результат задачи №2 только для 2013 года с наложением на столбец «Дата начало месяц» формат месяц. Т. е. я ожидаю увидеть в нем не даты, а январь, февраль, март и т. д.
+*/
+
+SELECT TOP(5)
+    companyName,  
+    DateName(
+        month,
+        DateAdd(
+            month,
+            month(dateId) - 1,
+            '1900-01-01'
+        )
+    ),
+    SUM(salesRub) AS 'sales'
+FROM
+    distributor.singleSales
+WHERE
+    DAY(dateId) = 1
+group by
+    companyName,
+    MONTH(dateId)
+ORDER BY
+    MONTH(dateId);
+
+/*markdown
+**5.** Разделить все компании на три сегмента:
+- Очень давно не покупали – не было покупок более 365 дней от текущей даты
+- Давно не покупали – не было покупок более 180 дней от текущей даты
+- Не покупали – не было покупок более 90 дней от текущей даты
+
+Текущею дату задать следующим образом: система должна брать существующею сегодня дату и смещать ее на 8 лет назад.
+
+*/
+
+DECLARE @start datetime;
+set @start = (
+    SELECT
+        DateAdd(
+            year,
+            -10,
+            GETDATE()
+        )
+);
+DECLARE @start365 datetime;
+set @start365 = (
+    SELECT
+        DateAdd(
+            day,
+            -365,
+            @start
+        )
+);
+DECLARE @start180 datetime;
+set @start180 = (
+    SELECT
+        DateAdd(
+            day,
+            -180,
+            @start
+        )
+);
+DECLARE @start90 datetime;
+set @start90 = (
+    SELECT
+        DateAdd(
+            day,
+            -90,
+            @start
+        )
+);
+with temp(company, mx) as (
+    SELECT
+        companyName,
+        max(dateId)
+    FROM
+        distributor.singleSales
+    WHERE
+        dateId < @start
+    GROUP BY
+        companyName
+)
+SELECT TOP(10)
+    company,
+    iif(
+        (mx < @start365),
+        'category 1',
+        iif(
+            (mx < @start180),
+            'category 2',
+            iif(
+                (mx < @start90),
+                'category 3',
+                'They bought recently.'
+            )
+        )
+    ) as 'category'
+FROM
+    temp
+
+
+/*markdown
+**6.** Рассчитать выручку компании в разрезе: Год – Квартал – Выручка компании. Представленные данные отсортировать: Год, Квартал.
+*/
+
+SELECT TOP(5)
+    companyName,  
+    YEAR(dateId) AS 'year',
+    DATEPART(QUARTER, dateId) as 'q',
+    SUM(salesRub) AS 'sales'
+FROM 
+    distributor.singleSales
+group by
+    companyName,
+    YEAR(dateId),
+    DATEPART(QUARTER, dateId)
+ORDER BY
+    YEAR(dateId),
+    DATEPART(QUARTER, dateId)
+
+/*markdown
+**7.** Необходимо проверить существование сезонной выручки внутри недели, для этого необходимо рассчитать выручку компании в разрезе: Год – День Недели – выручка компании. Представленные данные отсортировать: Год, день недели.
+*/
+
+SELECT TOP(5)
+    companyName,  
+    YEAR(dateId) AS 'year',
+    DATEPART(weekday, dateId) as 'day',
+    SUM(salesRub) AS 'sales'
+FROM 
+    distributor.singleSales
+GROUP BY
+    companyName,
+    YEAR(dateId),
+    DATEPART(weekday, dateId)
+ORDER BY
+    YEAR(dateId),
+    DATEPART(weekday, dateId)
+
+/*markdown
+**8.** Найдите все компании, у которых в наименование есть «ООО», без учета регистра.
+*/
+
+SELECT TOP(5)
+    companyName
+FROM
+    distributor.singleSales
+WHERE
+    companyName like '%ООО%' or
+    companyName like '%ооо%'
+
+/*markdown
+**9.** Найдите все компании, у которых в наименование в начале стоит «ООО», без учета регистра и пробелов вначале.
+*/
+
+SELECT TOP(5)
+    companyName
+FROM
+    distributor.singleSales
+WHERE
+    companyName like '[ ]*ООО%'
+    -- companyName REGEXP '^[[:space:]]*ооо%'
+    -- companyName like '%ООО%'
+
+
+
+/*markdown
+### Part 2 (sales)
+*/
+
+/*markdown
+
+*/
+
+/*markdown
+**26.** Вывести долю занимающих в продажах, различных фабрик.
+  Если в товаре фабрика не указана, сделать замену на «иные» и так же вывести в долях.
+  Нужно вывести как за весь период, так и в разрезе Год – Месяц (или дата начало месяца)
+*/
+
+-- For the whole time
+with doli(dolya_item, fabrica) as (
+    SELECT sum(quantity) as dolya_item, fabrica
+             FROM (
+                      SELECT s.itemId,
+                             count(s.itemId) as quantity,
+                             fabrica
+                      FROM distributor.item i
+                               INNER JOIN distributor.sales s on i.itemId = s.itemId
+                          GROUP BY fabrica, s.itemId
+                  ) as tmp
+             GROUP BY fabrica
+)
+SELECT TOP(10)
+    cast(dolya_item as float) / cast(
+        (SELECT sum(dolya_item) from doli) as float
+        ) as dolya, fabrica
+FROM
+    doli
+GROUP BY
+    dolya_item, fabrica;
+
+-- This is for Year/Month
+with doli(dolya_item, fabrica, year, month) as (
+    SELECT sum(quantity) as dolya_item, fabrica, year, month
+             FROM (
+                      SELECT
+                             year(s.dateId) as year,
+                             month(s.dateId) as month,
+                             s.itemId,
+                             count(s.itemId) as quantity,
+                             fabrica
+                      FROM distributor.item i
+                             INNER JOIN distributor.sales s on i.itemId = s.itemId
+                      GROUP BY year(s.dateId), month(s.dateId), fabrica, s.itemId
+                  ) as tmp
+             GROUP BY year, month, fabrica
+)
+SELECT TOP(10)
+    cast(dolya_item as float) / cast(
+        (SELECT sum(dolya_item) from doli) as float
+        ) as dolya, fabrica
+FROM
+    doli
+GROUP BY
+    year, month, dolya_item, fabrica;
 
 /*markdown
 **27.**
@@ -537,66 +822,9 @@ temp2(month, sales) as (
         year(distributor.singleSales.dateId),
         month(distributor.singleSales.dateId)
 )
-select
+select TOP(10)
     (cast(temp1.sales as float) / cast(temp2.sales as float)) as boom
 FROM
     temp1
 INNER JOIN
     temp2 on temp1.month = temp2.month
-
-
-/*markdown
-**26.** Вывести долю занимающих в продажах, различных фабрик.
-  Если в товаре фабрика не указана, сделать замену на «иные» и так же вывести в долях.
-  Нужно вывести как за весь период, так и в разрезе Год – Месяц (или дата начало месяца)
-
- */
---
-
--- For the whole time
-with doli(dolya_item, fabrica) as (
-    SELECT sum(quantity) as dolya_item, fabrica
-             FROM (
-                      SELECT s.itemId,
-                             count(s.itemId) as quantity,
-                             fabrica
-                      FROM distributor.item i
-                               INNER JOIN distributor.sales s on i.itemId = s.itemId
-                          GROUP BY fabrica, s.itemId
-                  ) as tmp
-             GROUP BY fabrica
-)
-SELECT
-    cast(dolya_item as float) / cast(
-        (SELECT sum(dolya_item) from doli) as float
-        ) as dolya, fabrica
-FROM
-    doli
-GROUP BY
-    dolya_item, fabrica;
-
--- This is for Year/Month
-with doli(dolya_item, fabrica, year, month) as (
-    SELECT sum(quantity) as dolya_item, fabrica, year, month
-             FROM (
-                      SELECT
-                             year(s.dateId) as year,
-                             month(s.dateId) as month,
-                             s.itemId,
-                             count(s.itemId) as quantity,
-                             fabrica
-                      FROM distributor.item i
-                             INNER JOIN distributor.sales s on i.itemId = s.itemId
-                      GROUP BY year(s.dateId), month(s.dateId), fabrica, s.itemId
-                  ) as tmp
-             GROUP BY year, month, fabrica
-)
-
-SELECT
-    cast(dolya_item as float) / cast(
-        (SELECT sum(dolya_item) from doli) as float
-        ) as dolya, fabrica
-FROM
-    doli
-GROUP BY
-    year, month, dolya_item, fabrica;
