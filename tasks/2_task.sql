@@ -449,13 +449,20 @@ WHERE
 **17.** Построить динамику изменения неликвидного товара по месяцам и по всем годам. Под неликвидом считается товар, который не продавался более 180 дней от текущей даты. Т. к. мы смотрим в динамике по месяцам, то для каждого месяца будет своя текущая дата, например, первый день месяца.
 */
 
+/*markdown
+**21.** Вывести 5 лучших клиентов для каждого менеджера за последние три месяца в динамике.
+  Под динамикой я хочу увидеть лучших клиентов по менеджерам для каждого месяца – года.
+  И отдельно только по годам.
+*/
+
+
 
 /*markdown
 **23.** Рассчитать долю загрузки складов для каждого года – месяца.
 */
 
 /*markdown
-**Решение.** Будем работать с табоицей remains: remains / sum(remains of 1 branchiD) for every branch (group by year - month)
+**Решение.** Будем работать так: sum(remains of 1 branchiD)/size of branch for every branch (group by year - month)
 */
 
 SELECT
@@ -463,7 +470,11 @@ SELECT
 FROM
      distributor.remains r INNER JOIN distributor.branch b on r.branchId=b.branchId
      INNER JOIN distributor.attributesItem  ai on r.itemId=ai.itemId
+WHERE
+    ai.volume is not null
 GROUP BY
+    year(dateId),
+    month(dateId),
     b.branchiD, sizeBranch;
 
 /*markdown
