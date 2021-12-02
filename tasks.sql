@@ -908,13 +908,13 @@ WHERE
 **16.** Определить долю вклада Топ 3 брендов в выручку компании для каждого года и месяца.
 */
 
-with temp(year, month, brand, brandSales, brandRank) as (
+with base(year, month, brand, brandSales, brandRank) as (
     SELECT
         year(dateId),
         month(dateId),
         brand,
         sum(salesRub),
-        RANK() OVER (
+        row_number() OVER (
             partition by
                 year(dateId),
                 month(dateId)
@@ -931,31 +931,21 @@ with temp(year, month, brand, brandSales, brandRank) as (
         year(dateId),
         month(dateId),
         brand
+),
+temp2(year, month, brand, brandSales, brandRank) as (
+    SELECT
+        'year',
+        'month',
+        brand,
+        sum(brandSales),
+        brandRank
+    FROM
+        base
 )
 SELECT
-    (
-        SELECT
-            sum(brandSales)
-        FROM
-            temp
-        WHERE
-            brandRank <= 3
-        GROUP BY
-            'year',
-            'month'
-    ) /
-    sum(brandSales)
-    -- sum(brandSales) / (
-    --     SELECT
-    --         sum(brandSales)
-    --     FROM
-    --         temp
-    -- )
+    *
 FROM
-    temp
-GROUP BY
-    'year',
-    'month'
+    temp2
 
 /*markdown
 **17.** Построить динамику изменения неликвидного товара по месяцам и по всем годам. Под неликвидом считается товар, который не продавался более 180 дней от текущей даты. Т. к. мы смотрим в динамике по месяцам, то для каждого месяца будет своя текущая дата, например, первый день месяца.
