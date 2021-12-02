@@ -77,17 +77,85 @@ WHERE
     salesRub >= 10000
 
 /*markdown
-**7.**
-*/
+**7.** Отсортировать данные по убыванию продаж в транзакциях, со следующими условиями.
 
--- TODO (or not)
+a. Филиал = Москва за период с 01.06.2011 по 30.06.2011
+
+b. Известно имя менеджера
+
+c. Известно название компании
+*/
+SELECT *
+FROM
+    [distributor].[singleSales]
+WHERE
+    branchName = 'Москва' AND dateId BETWEEN '2011-06-01'
+    AND '2011-06-30' AND fullname IS NOT NULL AND companyName IS NOT NULL
+ORDER BY
+    salesRub DESC
 
 /*markdown
-**8-11.** Отсортировать...
+**8-11.** 8. Отсортировать данные по убыванию продаж в чеках, со следующими условиями
+a. Филиал = Москва за период с 01.06.2011 по 30.06.2011
+b. Известно название компании
+c. Категория = Сантехника
+
+
+  9. Отсортировать по возрастанию по менеджерам, внутри следующего запроса
+a. Известно имя менеджера
+b. Известно имя компании
+c. Период с 01.02.2011 по 01.08.2011
+d. Бренд Roca
+
+
+  10. Отсортировать по возрастанию менеджеров и по убыванию продаж транзакций внутри менеджеров, по следующим условиями
+a. Период с 01.02.2011 по 30.09.2011
+b. Категория содержит слово обои
+c. Известно имя менеджера
+d. Количество продаж от 5 до 10
+
+
+  11. Получить информацию о транзакции с максимальной суммой платежа, по следующим условиям
+a. Филиал = Самара
+b. Известно имя менеджера
+c. Известно название компании
 */
 
--- ORDER BY ...
+SELECT *
+FROM
+    [distributor].[singleSales]
+WHERE
+    branchName = 'Москва' AND dateId BETWEEN '2011-06-01' AND '2011-06-30' AND companyName
+    IS NOT NULL AND category = 'Сантехника'
+ORDER BY
+    sales DESC
 
+
+SELECT *
+FROM [distributor].[singleSales]
+WHERE
+    dateId BETWEEN '2011-02-01' AND '2011-08-01'
+    AND companyName IS NOT NULL AND fullname IS NOT NULL AND brand = 'Roca'
+ORDER BY
+    fullname
+
+SELECT *
+FROM
+    [distributor].[singleSales]
+WHERE
+    dateId BETWEEN '2011-02-01' AND '2011-09-30'
+    AND fullname IS NOT NULL AND category LIKE '%Обои%' AND sales BETWEEN 5 AND 10
+ORDER BY
+    fullname ASC, salesRub DES
+
+
+SELECT TOP(1) *
+FROM
+    [distributor].[singleSales]
+WHERE
+    branchName = 'Самара' AND fullname IS NOT NULL AND companyName IS NOT NULL
+ORDER BY
+    salesRub DESC
 /*markdown
 **12-13.** Получить информацию о транзакции с максимальной суммой платежа, ...
 */
@@ -106,22 +174,74 @@ WHERE
         WHERE
             region='Самарская область'
     )
-
 /*markdown
-**14.** Переименовать красиво все наименования столбцов ...
+**13.** Переименовать красиво все наименования столбцов при вызове таблицы со следующими условиями
+a. Количество продаж от 5
+b. Известно имя менеджера
+c. Категория напольные покрытия
+d. Бренд Praktik
 */
 
--- AS ...
+
+SELECT [checkId] AS [Номер чека], [itemId] AS [Инд. номер товара], [branchName] AS [Город], [region] AS [Регион], sizeBranch AS [Размер склада], fullname AS [Менеджер], companyName AS [Компания], itemName AS [Наименование товара], brand AS [Брэнд], category AS [Категория], dateId AS [Дата], sales AS [Количество продаж], salesRub AS [Сумма продаж]
+FROM [distributor].[singleSales]
+WHERE category = 'Напольные покрытия' AND sales > 5 AND fullname IS NOT NULL AND brand = 'Praktik'
+
 
 /*markdown
-**15-17.** Посчитать количество уникальных менеджеров со следующими условиями...
+**14.** Посчитать количество уникальных менеджеров со следующими условиями
+a. Филиал = Новосибирск
+b. В фамилии присутствует сочетание букв «ов» или «ва»
+c. Количество продаж от 5 до 10
 */
 
-SELECT
-    COUNT(distinct salesManagerId) as num
-FROM
-    distributor.salesManager
--- WHERE ... 
+
+SELECT COUNT(DISTINCT fullname) AS [quantity]
+FROM [distributor].[singleSales]
+WHERE fullname LIKE '%ва%' OR fullname LIKE '%ов%' AND sales BETWEEN 5 AND 10 AND branchName = 'Новосибирск'
+
+-- Или по таблице менеджеров (при условии окончания фамилии на -ов, -ва):
+
+SELECT COUNT(DISTINCT surname) [quantity]
+FROM [distributor].[salesManager]
+WHERE surname LIKE '%ва' OR surname LIKE '%ов']
+
+
+/*markdown
+**15.** Посчитать кол-во уникальных клиентов со следующими условиями
+a. Регион = Самарская область
+b. Даты покупок с 01.09.2011
+c. Покупок больше 10
+d. Название компании начинается с “ООО”
+*/
+
+SELECT COUNT(DISTINCT companyName) AS [quantity]
+FROM [distributor].[singleSales]
+WHERE sales > 10 AND companyName LIKE 'ООО%' AND region = 'Самарская область' AND dateId > '2011-09-01'
+
+
+/*markdown
+**16.** Сколько обслуживает клиентов каждый менеджер со следующими условиями
+a. Филиал = Москва
+b. Продаж больше 10
+c. Известно имя менеджера
+d. Известно название компании
+Отсортированы по убыванию
+*/
+
+SELECT fullname, COUNT(DISTINCT companyName) AS [Количество_клиентов]
+FROM [distributor].[singleSales]
+WHERE sales > 10 AND branchName = 'Москва' AND fullname IS NOT NULL AND companyName IS NOT NULL
+GROUP BY fullname
+ORDER BY Количество_клиентов DESC
+
+/*markdown
+**17.** Сколько в среднем обслуживает клиентов менеджер филиала
+*/
+SELECT branchName, COUNT(DISTINCT companyName)/COUNT(DISTINCT fullname) AS [Среднее_количество_клиентов_на менеджера_филиала]
+FROM [distributor].[singleSales]
+WHERE fullname IS NOT NULL
+GROUP BY branchName
 
 /*markdown
 **18.** Сколько в среднем обслуживает клиентов менеджер филиала.
