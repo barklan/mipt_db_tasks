@@ -717,15 +717,8 @@ WHERE
 **9.** Найдите все компании, у которых в наименование в начале стоит «ООО», без учета регистра и пробелов вначале.
 */
 
---How the fuck am I supposed to do that without regex?
-SELECT TOP(5)
-    companyName
-FROM
-    distributor.singleSales
-WHERE
-    companyName like '[ ]ООО%'
-    -- companyName REGEXP '^[[:space:]]*ооо%'
-    -- companyName like '%ООО%'
+SELECT
+    'No regex support in t-sql'
 
 /*markdown
 **10.** Необходимо разделить ФИ, что записаны в столбеце «fullName» на три столбца, выделив отдельно фамилию, имя и фамилия И.
@@ -761,15 +754,27 @@ WHERE
 **1.** Рассчитать выручку компании в разрезе: Год – Месяц – Филиал – Выручка компании. Представленные данные отсортировать: Филиал, Год, Месяц.
 */
 
-SELECT
+SELECT TOP(5)
     branchName,
-    year(dateId),
-    month(dateId),
-    salesRub
+    year(dateId) as 'year',
+    month(dateId) as 'month',
+    sum(salesRub)
 FROM
     distributor.sales
 INNER JOIN
-    distributor.
+    distributor.branch on branch.branchId = sales.branchId
+GROUP BY
+    year(dateId),
+    month(dateId),
+    branchName
+ORDER BY
+    branchName,
+    'year',
+    'month'
+
+/*markdown
+**2.** Рассчитать выручку компании в разрезе: Филиал - Дата начало месяца – Выручка компании. Представление данных отсортировать: Филиал, Дата начало месяца.
+*/
 
 /*markdown
 **26.** Вывести долю занимающих в продажах, различных фабрик.
@@ -779,25 +784,40 @@ INNER JOIN
 
 -- For the whole time
 with doli(dolya_item, fabrica) as (
-    SELECT sum(quantity) as dolya_item, fabrica
-             FROM (
-                      SELECT s.itemId,
-                             count(s.itemId) as quantity,
-                             fabrica
-                      FROM distributor.item i
-                               INNER JOIN distributor.sales s on i.itemId = s.itemId
-                          GROUP BY fabrica, s.itemId
-                  ) as tmp
-             GROUP BY fabrica
+    SELECT
+        sum(quantity) as dolya_item,
+        fabrica
+    FROM
+        (
+            SELECT
+                s.itemId,
+                count(s.itemId) as quantity,
+                fabrica
+            FROM
+                distributor.item i
+            INNER JOIN
+                distributor.sales s on i.itemId = s.itemId
+            GROUP BY
+                fabrica,
+                s.itemId
+        ) as tmp
+    GROUP BY fabrica
 )
 SELECT TOP(10)
     cast(dolya_item as float) / cast(
-        (SELECT sum(dolya_item) from doli) as float
-        ) as dolya, fabrica
+        (
+            SELECT
+                sum(dolya_item)
+            from
+                doli
+        ) as float
+    ) as dolya,
+    fabrica
 FROM
     doli
 GROUP BY
-    dolya_item, fabrica;
+    dolya_item,
+    fabrica
 
 -- This is for Year/Month
 with doli(dolya_item, fabrica, year, month) as (
@@ -857,7 +877,7 @@ temp2(month, sales) as (
         year(distributor.singleSales.dateId),
         month(distributor.singleSales.dateId)
 )
-select TOP(10)
+select TOP(5)
     (cast(temp1.sales as float) / cast(temp2.sales as float)) as boom
 FROM
     temp1
