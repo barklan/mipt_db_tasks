@@ -776,6 +776,174 @@ ORDER BY
 **2.** Рассчитать выручку компании в разрезе: Филиал - Дата начало месяца – Выручка компании. Представление данных отсортировать: Филиал, Дата начало месяца.
 */
 
+--
+
+/*markdown
+**11.** В таблицу: distributor.remains представлена информация об остатках, как : Филиал – Артикул товара – Дата – Остаток – СвободныйОстаток. Особенность заполнения данной таблицы, что если остаток на какую-то дату нулевой (для товара и филиала), то в таблицу он не заноситься, например: 2020-01-01 – 10шт., 2020-01-02 – 7шт. 2020-01-04 – 15 шт. Необходимо, восстановить пропуски в данной таблицы и дописать пропущенные значения. Из нашего примера: 2020-01-03 – 0 шт. Учтите, что даты складирования товара – филиала своя.
+*/
+
+SELECT TOP(10) 
+    *
+FROM
+    distributor.remains
+WHERE
+    remains = 0
+
+/*markdown
+**12.** Найти объём неликвидного товара в сравнение со всем товаром в шт. под неликвидом считается товар, который не продавался более 180 дней от текущей даты. Точку отсчета текущей даты взять за 2014-01-01.
+*/
+
+DECLARE @start datetime;
+set @start = '2014-01-01';
+DECLARE @start180 datetime;
+set @start180 = (
+    SELECT
+        DateAdd(
+            day,
+            -180,
+            @start
+        )
+); 
+with temp(itemId, mostRecentDateWhenItemWasSold) as (
+    SELECT
+        itemId,
+        max(dateId)
+    FROM
+        distributor.sales
+    WHERE
+        dateId < @start
+    GROUP BY
+        itemId
+),
+temp2(itemId, liquidity) as (
+    SELECT
+        itemId,
+        iif(
+            mostRecentDateWhenItemWasSold < @start180,
+            'non liquid',
+            'liquid'
+        )
+    FROM
+        temp
+)
+SELECT
+    count(*) as 'Number of all items',
+    (
+        SELECT
+            count(*)
+        FROM
+            temp2
+        WHERE
+            liquidity = 'non liquid'
+    ) as 'Number of non-liquid items'
+FROM
+    temp
+    
+
+/*markdown
+**13.** Определить топ 3 лучших товаров по выручки для каждого Бренда без учета времени, т. е. за всю историю работы компании.
+*/
+
+SELECT TOP(3)
+    brand,
+    itemName,
+    sum(salesRub)
+FROM
+    distributor.sales
+INNER JOIN
+    distributor.item on (sales.itemId = item.itemId)
+GROUP BY
+    brand,
+    itemName
+ORDER BY
+    sum(salesRub) desc
+
+/*markdown
+**14.** Определить топ 3 лучших товаров по выручке для каждого бренда с учетом временного интервала год.
+*/
+
+SELECT TOP(3)
+    brand,
+    left(itemName, 40) as 'item',
+    sum(salesRub) as 'sum',
+    year(dateID) as 'year'
+FROM
+    distributor.sales
+INNER JOIN
+    distributor.item on (sales.itemId = item.itemId)
+GROUP BY
+    brand,
+    itemName,
+    year(dateId)
+ORDER BY
+    'sum' desc
+
+/*markdown
+**15.** Определить долю вклада Топ 3 брендов в выручку компании без учета времени, т. е. за всю историю работы компании.
+*/
+
+with temp(brand, brandSales, brandRank) as (
+    SELECT
+        brand,
+        sum(salesRub),
+        RANK() OVER (ORDER BY sum(salesRub) DESC) brandRank
+    FROM
+        distributor.sales
+    INNER JOIN
+        distributor.item on (sales.itemId = item.itemId)
+    WHERE
+        companyId = 7322 -- ! we are doing it only for this company
+    GROUP BY
+        brand
+)
+SELECT
+    sum(brandSales) / (
+        SELECT
+            sum(brandSales)
+        FROM
+            temp
+    )
+FROM
+    temp
+WHERE
+    brandRank <= 3
+
+/*markdown
+**16.** Определить долю вклада Топ 3 брендов в выручку компании для каждого года и месяца.
+*/
+
+with temp(brand, brandSales, brandRank) as (
+    SELECT
+        brand,
+        sum(salesRub),
+        RANK() OVER (ORDER BY sum(salesRub) DESC) brandRank
+    FROM
+        distributor.sales
+    INNER JOIN
+        distributor.item on (sales.itemId = item.itemId)
+    WHERE
+        companyId = 7322 -- ! we are doing it only for this company
+    GROUP BY
+        brand
+)
+SELECT
+    sum(brandSales) / (
+        SELECT
+            sum(brandSales)
+        FROM
+            temp
+    )
+FROM
+    temp
+WHERE
+    brandRank <= 3
+
+/*markdown
+**17.** Построить динамику изменения неликвидного товара по месяцам и по всем годам. Под неликвидом считается товар, который не продавался более 180 дней от текущей даты. Т. к. мы смотрим в динамике по месяцам, то для каждого месяца будет своя текущая дата, например, первый день месяца.
+*/
+
+
+
 /*markdown
 **26.** Вывести долю занимающих в продажах, различных фабрик.
   Если в товаре фабрика не указана, сделать замену на «иные» и так же вывести в долях.
