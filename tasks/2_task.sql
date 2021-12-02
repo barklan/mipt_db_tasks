@@ -451,6 +451,22 @@ WHERE
 
 
 /*markdown
+**23.** Рассчитать долю загрузки складов для каждого года – месяца.
+*/
+
+/*markdown
+**Решение.** Будем работать с табоицей remains: remains / sum(remains of 1 branchiD) for every branch (group by year - month)
+*/
+
+SELECT
+    cast(sum(remains*ai.volume) as float)/sizeBranch as dolya, b.branchId
+FROM
+     distributor.remains r INNER JOIN distributor.branch b on r.branchId=b.branchId
+     INNER JOIN distributor.attributesItem  ai on r.itemId=ai.itemId
+GROUP BY
+    b.branchiD, sizeBranch;
+
+/*markdown
 **24.** Рассчитайте стоимость складских запасов на основе себестоимости товара на каждом филиале для каждого разреза год – месяц (или дата начало месяца).
   Рассчитать так же и на основе альтернативной себестоимости, стоимость складских запасов. (basePrice из таблицы DDP)
 */
@@ -475,7 +491,22 @@ GROUP BY
     d.DDP,
     ai.boxPacking;
 
+with temp(sebestoimosti)  as
+    (SELECT
+        d.basePrice * ai.boxPacking as sebestoimost
+    FROM
+        distributor.attributesItem ai INNER JOIN distributor.ddp d on d.itemId=ai.itemId
+    WHERE
+        ai.boxPacking IS NOT NULL
+      AND
+        d.DDP IS NOT NULL
+    GROUP BY
+        yearId,
+        monthId,
+        d.basePrice,
+        ai.boxPacking)
 
+SELECT sum(sebestoimosti) FROM temp;
 
 /*markdown
 **25.** Рассчитать коэффициенты месячных сезонностей отдельно по штукам и деньгам для категории: Обои
