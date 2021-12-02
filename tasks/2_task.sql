@@ -451,6 +451,33 @@ WHERE
 
 
 /*markdown
+**24.** Рассчитайте стоимость складских запасов на основе себестоимости товара на каждом филиале для каждого разреза год – месяц (или дата начало месяца).
+  Рассчитать так же и на основе альтернативной себестоимости, стоимость складских запасов. (basePrice из таблицы DDP)
+*/
+
+/*markdown
+**Решение.** Думаю, что стоимость складских запасов в данном случае = себестоимость(DDP) * количество товара boxPacking (в разрезе, да) для каждого филиала.
+  А во втором случае все то же самое, но надо юзать basePrice и просуммировать для всех филиалов
+  будем  юзать distributor.attributesItem INNER JOIN distributor.ddp on itemId
+*/
+
+SELECT
+    d.DDP * ai.boxPacking as sebestoimost
+FROM
+    distributor.attributesItem ai INNER JOIN distributor.ddp d on d.itemId=ai.itemId
+WHERE
+    ai.boxPacking IS NOT NULL
+  AND
+    d.DDP IS NOT NULL
+GROUP BY
+    yearId,
+    monthId,
+    d.DDP,
+    ai.boxPacking;
+
+
+
+/*markdown
 **25.** Рассчитать коэффициенты месячных сезонностей отдельно по штукам и деньгам для категории: Обои
   Пояснение: посчитать продажи в штуках(рублях) в месяц/ продажи в штуках(рублях) за год
 Будем делать рассчеты на основе таблицы singleSales(потому что там все что нужно:) ) из схемы distributor, db demo
