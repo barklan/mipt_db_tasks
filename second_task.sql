@@ -596,16 +596,13 @@ DECLARE @year_sales as INT = (
     FROM distributor.singleSales ss
     WHERE category=N'Обои'
 )
-
 DECLARE @year_sales_rub as INT = (
     SELECT sum(salesRub)
     FROM distributor.singleSales ss
     WHERE category=N'Обои'
 )
-
 PRINT @year_sales; -- 2708989
 PRINT @year_sales_rub; -- 1882817500
-
 SELECT
     sum(sales)/@year_sales as month_koef_in_units,
     sum(salesRub)/@year_sales_rub as month_koef_in_rub
