@@ -472,27 +472,43 @@ FROM
 */
 
 SELECT
-    a.companyName,
+    a.fullname,
     avg(n) as average
 FROM
     (
         SELECT
             COUNT(itemId) as n,
             checkId,
-            companyName
+            fullname
         FROM
             distributor.singleSales
         WHERE
             salesRub < 3000 and
-            companyName IS NOT NULL
+            fullname IS NOT NULL
         GROUP BY
             checkId,
-            companyName
+            fullname
     ) as a
 GROUP BY
-    a.companyName
+    a.fullname
 ORDER BY
-    a.companyName
+    a.fullname
+
+
+/*markdown
+**30.**
+ */
+
+SELECT
+    fullname,
+    SUM(salesRub) as salesR
+FROM
+    distributor.singleSales
+GROUP BY
+    fullname
+HAVING
+    SUM(salesRub) > 2000000 and
+    fullname IS NOT NULL
 
 /*markdown
 **31.**
