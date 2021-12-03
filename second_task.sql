@@ -36,13 +36,15 @@ SELECT TOP(5)
     SUM(salesRub) AS выручка
 FROM
     distributor.singleSales
-WHERE DAY(dateId) = 1
-group by
+WHERE
+    DAY(dateId) = 1
+GROUP BY
     companyName,
     YEAR(dateId),
     MONTH(dateId)
-ORDER BY YEAR(dateId),
-         MONTH(dateId);
+ORDER BY
+    YEAR(dateId),
+    MONTH(dateId);
 
 /*markdown
 **3.** Для каждой компании рассчитать среднее время между покупками, отдельно показать результат в днях и в месяцах.
@@ -63,11 +65,16 @@ with temp(company, mn, mx, num) as (
 )
 select top(5)
     company,
+    -- Среднее время между покупками в месяцах и днях.
+    -- Среднее время можно посчитать как разницу между
+    -- Максимальной и минимальной датой, поделенной
+    -- на количество_покупок-1.
     (datediff(month, mn, mx) / (num - 1)) as 'months',
     (datediff(day, mn, mx) / (num - 1)) as 'days'
 FROM
     temp
 where
+    -- Не деление на ноль.
     num - 1 != 0
 ORDER BY
     months desc,
@@ -79,9 +86,10 @@ ORDER BY
 
 SELECT TOP(5)
     companyName,
-    DateName(
+    DateName( -- Функция получает месяц (текстом) из даты.
         month,
-        DateAdd(
+        DateAdd( -- Добавляем месяц покупки к какой-либо дате,
+                 -- чтобы получить полноценную дату.
             month,
             month(dateId) - 1,
             '1900-01-01'
@@ -91,8 +99,8 @@ SELECT TOP(5)
 FROM
     distributor.singleSales
 WHERE
-    DAY(dateId) = 1
-group by
+    DAY(dateId) = 1  -- Начало месяца
+GROUP BY
     companyName,
     MONTH(dateId)
 ORDER BY
@@ -106,16 +114,16 @@ ORDER BY
 Текущею дату задать следующим образом: система должна брать существующею сегодня дату и смещать ее на 8 лет назад.
 */
 
-DECLARE @start datetime;
+DECLARE @start datetime;  -- Дата отсчета.
 set @start = (
     SELECT
-        DateAdd(
+        DateAdd(  -- 10 лет назад от текущей даты.
             year,
             -10,
             GETDATE()
         )
 );
-DECLARE @start365 datetime;
+DECLARE @start365 datetime; -- Дата 365 дней раньше даты отсчета.
 set @start365 = (
     SELECT
         DateAdd(
@@ -142,7 +150,7 @@ set @start90 = (
             @start
         )
 );
-with temp(company, mx) as (
+with temp(company, mx) as ( -- Выбираем все записи раньше даты отссчета.
     SELECT
         companyName,
         max(dateId)
@@ -359,12 +367,6 @@ FROM
     distributor.sales, distributor.ddp
 WHERE companyName is not Null
 GROUP BY companyName, dateId
-
-/*markdown
-**10.** Рассчитать транзакционную выручку компании в разрезе: Филиал – Дата начало месяца – Бренд – транзакционная выручка компании. Представление данных отсортировать: Филиал, Дата начало месяца, Бренд. 
-*/
-
-
 
 /*markdown
 **11.** В таблицу: distributor.remains представлена информация об остатках, как : Филиал – Артикул товара – Дата – Остаток – СвободныйОстаток. Особенность заполнения данной таблицы, что если остаток на какую-то дату нулевой (для товара и филиала), то в таблицу он не заноситься, например: 2020-01-01 – 10шт., 2020-01-02 – 7шт. 2020-01-04 – 15 шт. Необходимо, восстановить пропуски в данной таблицы и дописать пропущенные значения. Из нашего примера: 2020-01-03 – 0 шт. Учтите, что даты складирования товара – филиала своя.
