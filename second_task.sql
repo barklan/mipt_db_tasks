@@ -163,7 +163,7 @@ with temp(company, mx) as ( -- Выбираем все записи раньше
 )
 SELECT TOP(10)
     company,
-    iif(
+    iif(  -- iif(условие, значение_если_условие_выполнено, значение_в_противном_случае)
         (mx < @start365),
         'category 1',
         iif(
@@ -212,7 +212,7 @@ FROM
 GROUP BY
     companyName,
     YEAR(dateId),
-    DATEPART(weekday, dateId)
+    DATEPART(weekday, dateId) -- Группируем по дням недели.
 ORDER BY
     YEAR(dateId),
     DATEPART(weekday, dateId)
@@ -394,7 +394,7 @@ set @start180 = (
             @start
         )
 );
-with temp(itemId, mostRecentDateWhenItemWasSold) as (
+with temp(itemId, mostRecentDateWhenItemWasSold) as ( -- Отбираем все значения раньше исходной даты.
     SELECT
         itemId,
         max(dateId)
@@ -405,7 +405,7 @@ with temp(itemId, mostRecentDateWhenItemWasSold) as (
     GROUP BY
         itemId
 ),
-temp2(itemId, liquidity) as (
+temp2(itemId, liquidity) as ( -- Разделяем товары на ликвидные и неликвидные.
     SELECT
         itemId,
         iif(
@@ -417,7 +417,7 @@ temp2(itemId, liquidity) as (
         temp
 )
 SELECT
-    count(*) as 'Number of all items',
+    count(*) as 'Number of all items', -- Общее число товаров
     (
         SELECT
             count(*)
@@ -475,7 +475,7 @@ with temp(brand, brandSales, brandRank) as (
     SELECT
         brand,
         sum(salesRub),
-        RANK() OVER (ORDER BY sum(salesRub) DESC) brandRank
+        RANK() OVER (ORDER BY sum(salesRub) DESC) brandRank -- Ранжируем по сумме выручки.
     FROM
         distributor.sales
     INNER JOIN
