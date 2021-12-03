@@ -284,7 +284,87 @@ ORDER BY
 **2.** Рассчитать выручку компании в разрезе: Филиал - Дата начало месяца – Выручка компании. Представление данных отсортировать: Филиал, Дата начало месяца.
 */
 
---
+SELECT branchId as "Филиал", dateId as "Первое число месяца", sum(salesRub) as "Выручка"
+FROM distributor.sales 
+WHERE day(dateId) = 01 AND branchId is not Null 
+GROUP BY branchId, dateId
+ORDER BY branchId, dateId
+
+/*markdown
+**3.** Рассчитать выручку компании в разрезе: Филиал – Дата начало месяца – Товарная категория – выручка компании. Представление данных отсортировать: Филиал, Дата начало месяца, Товарная категория.
+*/
+
+SELECT branchName as "Филиал", dateId as "Первое число месяца", sum(salesRub) as "Выручка", category 
+FROM distributor.singleSales
+WHERE DAY(dateId) = 01 AND branchName is not Null AND Category is not Null 
+GROUP BY branchName, dateId, category
+ORDER BY branchName, dateId, category
+
+/*markdown
+**4.** Рассчитать выручку компании в разрезе: Филиал – Дата начало месяца – Бренд – выручка компании. Представление данных отсортировать: Филиал, Дата начало месяца, Бренд.
+*/
+
+SELECT branchName as "Филиал", dateId as "Первое число месяца", sum(salesRub) as "Выручка", brand
+FROM distributor.singleSales
+WHERE DAY(dateId) = 01 AND branchName is not Null AND brand is not Null 
+GROUP BY branchName, dateId, brand
+ORDER BY branchName, dateId, brand
+
+/*markdown
+**5.** Написать запрос, сравнивающий общую сумму задачи №4 и Задачи№2. Объяснить расхождения, если они есть. Написать запрос, выявляющий все транзакции влияющие на расхождения выручки в задаче №4.
+*/
+
+SELECT DISTINCT top(3) brand as "Бренд" , Sum(salesRub) AS "Наибольший вклад"
+FROM distributor.singleSales
+GROUP BY brand
+ORDER BY "Наибольший вклад" DESC;
+
+/*markdown
+**6.** Определить топ 3 бренда, дающий наибольший вклад в выручку компании за 2013 год. 
+*/
+
+SELECT DISTINCT top(3) brand as "Бренд" , Sum(salesRub) AS "Наибольший вклад"
+FROM distributor.singleSales
+GROUP BY brand
+ORDER BY "Наибольший вклад" DESC;
+
+/*markdown
+**7.** Рассчитать выручку компании в разрезе: Менеджер – Бренд – выручка компании. Представленные данные отсортировать: Менеджер, Бренд.
+*/
+
+SELECT fullname as "Менеджер", brand as "Бренд", sum(salesRub) as "Выручка"
+FROM distributor.singleSales
+WHERE fullname is not Null AND brand is not Null 
+GROUP BY fullname, brand
+ORDER BY fullname, brand
+
+/*markdown
+**8.** Рассчитать кол-во компаний приходятся на менеджера в течение каждого года. Фактически я ожидаю увидеть таблицу: Год – Менеджер – Кол-во компаний.
+*/
+
+SELECT DISTINCT fullname as "Менеджер", YEAR(dateId) as "Год", count(companyName) as "Кол-во компаний"
+FROM distributor.singleSales 
+WHERE fullname is not null
+GROUP BY dateId, fullname, companyName
+
+/*markdown
+**9.** Рассчитать транзакционную выручку компании по годам. Незабудке, что себестоимость в разных валютах и надо использовать курс валюты для пересчета. Если себестоимость представлена и в рублях, и в долларах, то у рублей приоритет.
+*/
+
+SELECT
+    YEAR(dateId) as "Год",
+    companyName as "Компания",
+    (sum(salesRub) - basePricePurchase) as "Выручка"
+FROM
+    distributor.sales, distributor.ddp
+WHERE companyName is not Null
+GROUP BY companyName, dateId
+
+/*markdown
+**10.** Рассчитать транзакционную выручку компании в разрезе: Филиал – Дата начало месяца – Бренд – транзакционная выручка компании. Представление данных отсортировать: Филиал, Дата начало месяца, Бренд. 
+*/
+
+
 
 /*markdown
 **11.** В таблицу: distributor.remains представлена информация об остатках, как : Филиал – Артикул товара – Дата – Остаток – СвободныйОстаток. Особенность заполнения данной таблицы, что если остаток на какую-то дату нулевой (для товара и филиала), то в таблицу он не заноситься, например: 2020-01-01 – 10шт., 2020-01-02 – 7шт. 2020-01-04 – 15 шт. Необходимо, восстановить пропуски в данной таблицы и дописать пропущенные значения. Из нашего примера: 2020-01-03 – 0 шт. Учтите, что даты складирования товара – филиала своя.
@@ -493,16 +573,37 @@ WHERE
     allSales != 0
 
 /*markdown
-**17.** Построить динамику изменения неликвидного товара по месяцам и по всем годам. Под неликвидом считается товар, который не продавался более 180 дней от текущей даты. Т. к. мы смотрим в динамике по месяцам, то для каждого месяца будет своя текущая дата, например, первый день месяца.
-*/
-
--- todo
-
-/*markdown
 **18.** Вывести топ 2 лучших менеджеров для каждого филиала в динамике. Под динамикой я хочу увидеть лучших менеджеров для каждого месяца – года. И отдельно только по годам.
 */
 
--- todo
+-- WITH base(year, month, managerRank) as (
+--     SELECT
+--         year(dateId) as 'year',
+--         month(dateId) as 'month',
+--         row_number() OVER (
+--             partition by
+--                 year(dateId),
+--                 month(dateId)
+--             ORDER BY
+--                 sum(salesRub) DESC
+--         ) as 'managerRank'
+--     FROM
+--         distributor.sales
+--     INNER JOIN
+--         distributor.salesManager
+--         on sales.salesManagerId = salesManager.salesManagerId
+--     GROUP BY
+--         year(dateId),
+--         month(dateId)
+-- )
+-- SELECT top(10)
+--     base.year,
+--     base.month,
+--     base.managerRank
+-- FROM
+--     base
+-- WHERE
+--     base.managerRank <= 2
 
 /*markdown
 **19.** Вывести среднюю месячную динамику продаж, по выручке за предыдущие три месяца по менеджерам, для периода год – месяц и отдельно «Дата начало месяца». Т. е. если сейчас 2013-01-01, то я хочу видеть среднюю выручку по менеджерам за 2012-10-01, 2012-11-01,2012-12-01.
