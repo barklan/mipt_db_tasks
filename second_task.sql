@@ -65,16 +65,11 @@ with temp(company, mn, mx, num) as (
 )
 select top(5)
     company,
-    -- Среднее время между покупками в месяцах и днях.
-    -- Среднее время можно посчитать как разницу между
-    -- Максимальной и минимальной датой, поделенной
-    -- на количество_покупок-1.
     (datediff(month, mn, mx) / (num - 1)) as 'months',
     (datediff(day, mn, mx) / (num - 1)) as 'days'
 FROM
     temp
 where
-    -- Не деление на ноль.
     num - 1 != 0
 ORDER BY
     months desc,
@@ -86,10 +81,9 @@ ORDER BY
 
 SELECT TOP(5)
     companyName,
-    DateName( -- Функция получает месяц (текстом) из даты.
+    DateName(
         month,
-        DateAdd( -- Добавляем месяц покупки к какой-либо дате,
-                 -- чтобы получить полноценную дату.
+        DateAdd(
             month,
             month(dateId) - 1,
             '1900-01-01'
@@ -99,7 +93,7 @@ SELECT TOP(5)
 FROM
     distributor.singleSales
 WHERE
-    DAY(dateId) = 1  -- Начало месяца
+    DAY(dateId) = 1
 GROUP BY
     companyName,
     MONTH(dateId)
@@ -114,16 +108,16 @@ ORDER BY
 Текущею дату задать следующим образом: система должна брать существующею сегодня дату и смещать ее на 8 лет назад.
 */
 
-DECLARE @start datetime;  -- Дата отсчета.
+DECLARE @start datetime;
 set @start = (
     SELECT
-        DateAdd(  -- 10 лет назад от текущей даты.
+        DateAdd(
             year,
             -10,
             GETDATE()
         )
 );
-DECLARE @start365 datetime; -- Дата 365 дней раньше даты отсчета.
+DECLARE @start365 datetime; 
 set @start365 = (
     SELECT
         DateAdd(
@@ -150,7 +144,7 @@ set @start90 = (
             @start
         )
 );
-with temp(company, mx) as ( -- Выбираем все записи раньше даты отссчета.
+with temp(company, mx) as ( 
     SELECT
         companyName,
         max(dateId)
@@ -481,7 +475,7 @@ with temp(brand, brandSales, brandRank) as (
     INNER JOIN
         distributor.item on (sales.itemId = item.itemId)
     WHERE
-        companyId = 7322 -- ! we are doing it only for this company
+        companyId = 7322
     GROUP BY
         brand
 )
@@ -512,10 +506,7 @@ with topThreeBrands(year, month, topThreeSum) as (
                 year(dateId) as 'year',
                 month(dateId) as 'month',
                 brand,
-                -- Сумма для каждого бренда сгруппированная по Год-Месяц
                 sum(salesRub) as 'sum',
-                -- Ранг бренда в группе Год-Месяц в зависимости от продаж
-                -- (1 - бренд с наибольшими продажами в данной группе)
                 row_number() OVER (
                     partition by
                         year(dateId),
@@ -528,7 +519,7 @@ with topThreeBrands(year, month, topThreeSum) as (
             INNER JOIN
                 distributor.item on (sales.itemId = item.itemId)
             WHERE
-                companyId = 7322 -- ! we are doing it only for this company
+                companyId = 7322 
             GROUP BY
                 year(dateId),
                 month(dateId),
@@ -544,14 +535,13 @@ allBrands(year, month, allSales) as (
     SELECT
         year(dateId),
         month(dateId),
-        -- Сумма для всех брендов сгруппированная по Год-Месяц
         sum(salesRub)
     FROM
         distributor.sales
     INNER JOIN
         distributor.item on (sales.itemId = item.itemId)
     WHERE
-        companyId = 7322 -- ! we are doing it only for this company
+        companyId = 7322 
     GROUP BY
         year(dateId),
         month(dateId)
@@ -565,8 +555,6 @@ SELECT TOP(10)
 FROM
     allBrands
 INNER JOIN
-    -- В обоих CTE мы группируем по Год-Месяц.
-    -- Дуплицированных записей быть не должно.
     topThreeBrands on (
         allBrands.year = topThreeBrands.year and
         allBrands.month = topThreeBrands.month
