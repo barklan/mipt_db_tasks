@@ -960,24 +960,7 @@ INNER JOIN
     ON temp1.month = temp2.month
 
 /*markdown
-```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-```
-Recursive CTE in your face
+*recursive cte's*
 */
 
 WITH cte as (
