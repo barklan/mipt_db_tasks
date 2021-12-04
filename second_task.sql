@@ -50,7 +50,7 @@ ORDER BY
 **3.** Для каждой компании рассчитать среднее время между покупками, отдельно показать результат в днях и в месяцах.
 */
 
-with temp(company, mn, mx, num) as (
+WITH temp(company, mn, mx, num) AS (
     SELECT
         companyName,
         min(dateId),
@@ -63,10 +63,10 @@ with temp(company, mn, mx, num) as (
     GROUP BY
         companyName
 )
-select top(5)
+SELECT TOP(5)
     company,
-    (datediff(month, mn, mx) / (num - 1)) as 'months',
-    (datediff(day, mn, mx) / (num - 1)) as 'days'
+    (datediff(month, mn, mx) / (num - 1)) AS 'months',
+    (datediff(day, mn, mx) / (num - 1)) AS 'days'
 FROM
     temp
 where
@@ -109,7 +109,7 @@ ORDER BY
 */
 
 DECLARE @start datetime;
-set @start = (
+SET @start = (
     SELECT
         DateAdd(
             year,
@@ -117,8 +117,8 @@ set @start = (
             GETDATE()
         )
 );
-DECLARE @start365 datetime; 
-set @start365 = (
+DECLARE @start365 datetime;
+SET @start365 = (
     SELECT
         DateAdd(
             day,
@@ -127,7 +127,7 @@ set @start365 = (
         )
 );
 DECLARE @start180 datetime;
-set @start180 = (
+SET @start180 = (
     SELECT
         DateAdd(
             day,
@@ -136,7 +136,7 @@ set @start180 = (
         )
 );
 DECLARE @start90 datetime;
-set @start90 = (
+SET @start90 = (
     SELECT
         DateAdd(
             day,
@@ -144,7 +144,7 @@ set @start90 = (
             @start
         )
 );
-with temp(company, mx) as ( 
+WITH temp(company, mx) AS (
     SELECT
         companyName,
         max(dateId)
@@ -169,7 +169,7 @@ SELECT TOP(10)
                 'They bought recently.'
             )
         )
-    ) as 'category'
+    ) AS 'category'
 FROM
     temp
 
@@ -180,11 +180,11 @@ FROM
 SELECT TOP(5)
     companyName,
     YEAR(dateId) AS 'year',
-    DATEPART(QUARTER, dateId) as 'q',
+    DATEPART(QUARTER, dateId) AS 'q',
     SUM(salesRub) AS 'sales'
 FROM
     distributor.singleSales
-group by
+GROUP BY
     companyName,
     YEAR(dateId),
     DATEPART(QUARTER, dateId)
@@ -199,7 +199,7 @@ ORDER BY
 SELECT TOP(5)
     companyName,
     YEAR(dateId) AS 'year',
-    DATEPART(weekday, dateId) as 'day',
+    DATEPART(weekday, dateId) AS 'day',
     SUM(salesRub) AS 'sales'
 FROM
     distributor.singleSales
@@ -235,7 +235,7 @@ SELECT
 */
 
 SELECT
-    distinct top(5) fullname,
+    distinct TOP(5) fullname,
     SUBSTRING(
         fullname,
         1,
@@ -254,7 +254,7 @@ SELECT
 FROM
     distributor.singleSales
 WHERE
-    fullname is not Null
+    fullname IS NOT Null
 
 /*markdown
 ### Part 2 (sales)
@@ -266,13 +266,14 @@ WHERE
 
 SELECT TOP(5)
     branchName,
-    year(dateId) as 'year',
-    month(dateId) as 'month',
+    year(dateId) AS 'year',
+    month(dateId) AS 'month',
     sum(salesRub)
 FROM
     distributor.sales
 INNER JOIN
-    distributor.branch on branch.branchId = sales.branchId
+    distributor.branch
+    ON branch.branchId = sales.branchId
 GROUP BY
     year(dateId),
     month(dateId),
@@ -286,81 +287,151 @@ ORDER BY
 **2.** Рассчитать выручку компании в разрезе: Филиал - Дата начало месяца – Выручка компании. Представление данных отсортировать: Филиал, Дата начало месяца.
 */
 
-SELECT branchId as "Филиал", dateId as "Первое число месяца", sum(salesRub) as "Выручка"
-FROM distributor.sales 
-WHERE day(dateId) = 01 AND branchId is not Null 
-GROUP BY branchId, dateId
-ORDER BY branchId, dateId
+SELECT
+    branchId AS "Филиал",
+    dateId AS "Первое число месяца",
+    sum(salesRub) AS "Выручка"
+FROM
+    distributor.sales
+WHERE
+    day(dateId) = 01
+    AND branchId IS NOT Null
+GROUP BY
+    branchId,
+    dateId
+ORDER BY
+    branchId,
+    dateId
 
 /*markdown
 **3.** Рассчитать выручку компании в разрезе: Филиал – Дата начало месяца – Товарная категория – выручка компании. Представление данных отсортировать: Филиал, Дата начало месяца, Товарная категория.
 */
 
-SELECT branchName as "Филиал", dateId as "Первое число месяца", sum(salesRub) as "Выручка", category 
-FROM distributor.singleSales
-WHERE DAY(dateId) = 01 AND branchName is not Null AND Category is not Null 
-GROUP BY branchName, dateId, category
-ORDER BY branchName, dateId, category
+SELECT
+    branchName AS "Филиал",
+    dateId AS "Первое число месяца",
+    sum(salesRub) AS "Выручка",
+    category
+FROM
+    distributor.singleSales
+WHERE
+    DAY(dateId) = 01
+    AND branchName IS NOT Null
+    AND Category IS NOT Null
+GROUP BY
+    branchName,
+    dateId,
+    category
+ORDER BY
+    branchName,
+    dateId,
+    category
 
 /*markdown
 **4.** Рассчитать выручку компании в разрезе: Филиал – Дата начало месяца – Бренд – выручка компании. Представление данных отсортировать: Филиал, Дата начало месяца, Бренд.
 */
 
-SELECT branchName as "Филиал", dateId as "Первое число месяца", sum(salesRub) as "Выручка", brand
-FROM distributor.singleSales
-WHERE DAY(dateId) = 01 AND branchName is not Null AND brand is not Null 
-GROUP BY branchName, dateId, brand
-ORDER BY branchName, dateId, brand
+SELECT
+    branchName AS "Филиал",
+    dateId AS "Первое число месяца",
+    sum(salesRub) AS "Выручка",
+    brand
+FROM
+    distributor.singleSales
+WHERE
+    DAY(dateId) = 01
+    AND branchName IS NOT Null
+    AND brand IS NOT Null
+GROUP BY
+    branchName,
+    dateId,
+    brand
+ORDER BY
+    branchName,
+    dateId,
+    brand
 
 /*markdown
 **5.** Написать запрос, сравнивающий общую сумму задачи №4 и Задачи№2. Объяснить расхождения, если они есть. Написать запрос, выявляющий все транзакции влияющие на расхождения выручки в задаче №4.
 */
 
-SELECT DISTINCT top(3) brand as "Бренд" , Sum(salesRub) AS "Наибольший вклад"
-FROM distributor.singleSales
-GROUP BY brand
-ORDER BY "Наибольший вклад" DESC;
+SELECT DISTINCT TOP(3)
+    brand AS "Бренд",
+    SUM(salesRub) AS "Наибольший вклад"
+FROM
+    distributor.singleSales
+GROUP BY
+    brand
+ORDER BY
+    "Наибольший вклад" DESC
 
 /*markdown
-**6.** Определить топ 3 бренда, дающий наибольший вклад в выручку компании за 2013 год. 
+**6.** Определить топ 3 бренда, дающий наибольший вклад в выручку компании за 2013 год.
 */
 
-SELECT DISTINCT top(3) brand as "Бренд" , Sum(salesRub) AS "Наибольший вклад"
-FROM distributor.singleSales
-GROUP BY brand
-ORDER BY "Наибольший вклад" DESC;
+SELECT DISTINCT TOP(3)
+    brand AS "Бренд",
+    SUM(salesRub) AS "Наибольший вклад"
+FROM
+    distributor.singleSales
+GROUP BY
+    brand
+ORDER BY
+    "Наибольший вклад" DESC
 
 /*markdown
 **7.** Рассчитать выручку компании в разрезе: Менеджер – Бренд – выручка компании. Представленные данные отсортировать: Менеджер, Бренд.
 */
 
-SELECT fullname as "Менеджер", brand as "Бренд", sum(salesRub) as "Выручка"
-FROM distributor.singleSales
-WHERE fullname is not Null AND brand is not Null 
-GROUP BY fullname, brand
-ORDER BY fullname, brand
+SELECT
+    fullname AS "Менеджер",
+    brand AS "Бренд",
+    SUM(salesRub) AS "Выручка"
+FROM
+    distributor.singleSales
+WHERE
+    fullname IS NOT Null
+    AND brand IS NOT Null
+GROUP BY
+    fullname,
+    brand
+ORDER BY
+    fullname,
+    brand
 
 /*markdown
 **8.** Рассчитать кол-во компаний приходятся на менеджера в течение каждого года. Фактически я ожидаю увидеть таблицу: Год – Менеджер – Кол-во компаний.
 */
 
-SELECT DISTINCT fullname as "Менеджер", YEAR(dateId) as "Год", count(companyName) as "Кол-во компаний"
-FROM distributor.singleSales 
-WHERE fullname is not null
-GROUP BY dateId, fullname, companyName
+SELECT
+    DISTINCT fullname AS "Менеджер",
+    YEAR(dateId) AS "Год",
+    count(companyName) AS "Кол-во компаний"
+FROM
+    distributor.singleSales
+WHERE
+    fullname IS NOT null
+GROUP BY
+    dateId,
+    fullname,
+    companyName
 
 /*markdown
 **9.** Рассчитать транзакционную выручку компании по годам. Незабудке, что себестоимость в разных валютах и надо использовать курс валюты для пересчета. Если себестоимость представлена и в рублях, и в долларах, то у рублей приоритет.
 */
 
 SELECT
-    YEAR(dateId) as "Год",
-    companyName as "Компания",
-    (sum(salesRub) - basePricePurchase) as "Выручка"
+    YEAR(dateId) AS "Год",
+    companyName AS "Компания",
+    (sum(salesRub) - basePricePurchase) AS "Выручка"
 FROM
-    distributor.sales, distributor.ddp
-WHERE companyName is not Null
-GROUP BY companyName, dateId
+    distributor.sales,
+    distributor.ddp
+WHERE
+    companyName IS NOT Null
+GROUP BY
+    companyName,
+    dateId
 
 /*markdown
 **11.** В таблицу: distributor.remains представлена информация об остатках, как : Филиал – Артикул товара – Дата – Остаток – СвободныйОстаток. Особенность заполнения данной таблицы, что если остаток на какую-то дату нулевой (для товара и филиала), то в таблицу он не заноситься, например: 2020-01-01 – 10шт., 2020-01-02 – 7шт. 2020-01-04 – 15 шт. Необходимо, восстановить пропуски в данной таблицы и дописать пропущенные значения. Из нашего примера: 2020-01-03 – 0 шт. Учтите, что даты складирования товара – филиала своя.
@@ -378,9 +449,9 @@ WHERE
 */
 
 DECLARE @start datetime;
-set @start = '2014-01-01';
+SET @start = '2014-01-01';
 DECLARE @start180 datetime;
-set @start180 = (
+SET @start180 = (
     SELECT
         DateAdd(
             day,
@@ -388,7 +459,7 @@ set @start180 = (
             @start
         )
 );
-with temp(itemId, mostRecentDateWhenItemWasSold) as (
+WITH temp(itemId, mostRecentDateWhenItemWasSold) AS (
     SELECT
         itemId,
         max(dateId)
@@ -399,7 +470,7 @@ with temp(itemId, mostRecentDateWhenItemWasSold) as (
     GROUP BY
         itemId
 ),
-temp2(itemId, liquidity) as (
+temp2(itemId, liquidity) AS (
     SELECT
         itemId,
         iif(
@@ -411,7 +482,7 @@ temp2(itemId, liquidity) as (
         temp
 )
 SELECT
-    count(*) as 'Number of all items',
+    count(*) AS 'Number of all items',
     (
         SELECT
             count(*)
@@ -419,7 +490,7 @@ SELECT
             temp2
         WHERE
             liquidity = 'non liquid'
-    ) as 'Number of non-liquid items'
+    ) AS 'Number of non-liquid items'
 FROM
     temp
 
@@ -434,7 +505,8 @@ SELECT TOP(3)
 FROM
     distributor.sales
 INNER JOIN
-    distributor.item on (sales.itemId = item.itemId)
+    distributor.item
+    ON (sales.itemId = item.itemId)
 GROUP BY
     brand,
     itemName
@@ -447,13 +519,14 @@ ORDER BY
 
 SELECT TOP(3)
     brand,
-    left(itemName, 40) as 'item',
-    sum(salesRub) as 'sum',
-    year(dateID) as 'year'
+    left(itemName, 40) AS 'item',
+    sum(salesRub) AS 'sum',
+    year(dateID) AS 'year'
 FROM
     distributor.sales
 INNER JOIN
-    distributor.item on (sales.itemId = item.itemId)
+    distributor.item
+    ON (sales.itemId = item.itemId)
 GROUP BY
     brand,
     itemName,
@@ -465,7 +538,7 @@ ORDER BY
 **15.** Определить долю вклада Топ 3 брендов в выручку компании без учета времени, т. е. за всю историю работы компании.
 */
 
-with temp(brand, brandSales, brandRank) as (
+WITH temp(brand, brandSales, brandRank) AS (
     SELECT
         brand,
         sum(salesRub),
@@ -473,7 +546,8 @@ with temp(brand, brandSales, brandRank) as (
     FROM
         distributor.sales
     INNER JOIN
-        distributor.item on (sales.itemId = item.itemId)
+        distributor.item
+        ON (sales.itemId = item.itemId)
     WHERE
         companyId = 7322
     GROUP BY
@@ -495,7 +569,7 @@ WHERE
 **16.** Определить долю вклада Топ 3 брендов в выручку компании для каждого года и месяца.
 */
 
-with topThreeBrands(year, month, topThreeSum) as (
+WITH topThreeBrands(year, month, topThreeSum) AS (
     SELECT
         temp.year,
         temp.month,
@@ -503,35 +577,35 @@ with topThreeBrands(year, month, topThreeSum) as (
     FROM
         (
             SELECT
-                year(dateId) as 'year',
-                month(dateId) as 'month',
+                year(dateId) AS 'year',
+                month(dateId) AS 'month',
                 brand,
-                sum(salesRub) as 'sum',
+                sum(salesRub) AS 'sum',
                 row_number() OVER (
                     partition by
                         year(dateId),
                         month(dateId)
                     ORDER BY
                         sum(salesRub) DESC
-                ) as 'brandRank'
+                ) AS 'brandRank'
             FROM
                 distributor.sales
             INNER JOIN
-                distributor.item on (sales.itemId = item.itemId)
+                distributor.item ON (sales.itemId = item.itemId)
             WHERE
-                companyId = 7322 
+                companyId = 7322
             GROUP BY
                 year(dateId),
                 month(dateId),
                 brand
-        ) as temp
+        ) AS temp
     WHERE
         temp.brandRank <= 3
     GROUP BY
         temp.year,
         temp.month
 ),
-allBrands(year, month, allSales) as (
+allBrands(year, month, allSales) AS (
     SELECT
         year(dateId),
         month(dateId),
@@ -539,9 +613,9 @@ allBrands(year, month, allSales) as (
     FROM
         distributor.sales
     INNER JOIN
-        distributor.item on (sales.itemId = item.itemId)
+        distributor.item ON (sales.itemId = item.itemId)
     WHERE
-        companyId = 7322 
+        companyId = 7322
     GROUP BY
         year(dateId),
         month(dateId)
@@ -551,12 +625,12 @@ SELECT TOP(10)
     allBrands.month,
     allSales,
     topThreeSum,
-    topThreeSum / allSales as ratio
+    topThreeSum / allSales AS ratio
 FROM
     allBrands
 INNER JOIN
-    topThreeBrands on (
-        allBrands.year = topThreeBrands.year and
+    topThreeBrands ON (
+        allBrands.year = topThreeBrands.year AND
         allBrands.month = topThreeBrands.month
     )
 WHERE
@@ -566,27 +640,27 @@ WHERE
 **18.** Вывести топ 2 лучших менеджеров для каждого филиала в динамике. Под динамикой я хочу увидеть лучших менеджеров для каждого месяца – года. И отдельно только по годам.
 */
 
--- WITH base(year, month, managerRank) as (
+-- WITH base(year, month, managerRank) AS (
 --     SELECT
---         year(dateId) as 'year',
---         month(dateId) as 'month',
+--         year(dateId) AS 'year',
+--         month(dateId) AS 'month',
 --         row_number() OVER (
 --             partition by
 --                 year(dateId),
 --                 month(dateId)
 --             ORDER BY
 --                 sum(salesRub) DESC
---         ) as 'managerRank'
+--         ) AS 'managerRank'
 --     FROM
 --         distributor.sales
 --     INNER JOIN
 --         distributor.salesManager
---         on sales.salesManagerId = salesManager.salesManagerId
+--         ON sales.salesManagerId = salesManager.salesManagerId
 --     GROUP BY
 --         year(dateId),
 --         month(dateId)
 -- )
--- SELECT top(10)
+-- SELECT TOP(10)
 --     base.year,
 --     base.month,
 --     base.managerRank
@@ -599,35 +673,82 @@ WHERE
 **19.** Вывести среднюю месячную динамику продаж, по выручке за предыдущие три месяца по менеджерам, для периода год – месяц и отдельно «Дата начало месяца». Т. е. если сейчас 2013-01-01, то я хочу видеть среднюю выручку по менеджерам за 2012-10-01, 2012-11-01,2012-12-01.
 */
 
-SELECT
-    top(10)
+SELECT TOP(10)
     s.salesManagerId,
     format(s.dateId, 'MM.yyyy'),
-    sum(s.salesRub) as month_revenue
+    sum(s.salesRub) AS month_revenue
 FROM
-     distributor.sales s
-     inner join distributor.salesManager sM
-     on s.salesManagerId = sM.salesManagerId
+    distributor.sales s
+INNER JOIN
+    distributor.salesManager sM
+    ON s.salesManagerId = sM.salesManagerId
 GROUP BY
-         s.salesManagerId, format(s.dateId, 'MM.yyyy')
+    s.salesManagerId,
+    format(s.dateId, 'MM.yyyy')
 ORDER BY
-         s.salesManagerId, format(s.dateId, 'MM.yyyy');
+    s.salesManagerId,
+    format(s.dateId, 'MM.yyyy');
+
+/*markdown
+**20.** Вывести среднюю месячную динамику продаж, по среднему чеку за предыдущие три месяца по менеджерам, для периода год – месяц и отдельно «Дата начало месяца». Т. е. если сейчас 2013-01-01 то я хочу видеть средний чек по менеджерам за 2012-10-01, 2012-11-01,2012-12-01
+*/
+
+WITH temp AS (
+    SELECT TOP(20)
+        s.salesManagerId AS sm_id,
+        format(s.dateId, 'MM.yyyy') AS my_date,
+        avg(s.salesRub) AS month_avg_price
+    FROM
+        distributor.sales s
+    INNER JOIN
+        distributor.salesManager sM
+        ON s.salesManagerId = sM.salesManagerId
+    GROUP BY
+        s.salesManagerId, format(s.dateId, 'MM.yyyy')
+    ORDER BY
+        s.salesManagerId, format(s.dateId, 'MM.yyyy')
+)
+SELECT
+    sm_id,
+    my_date,
+    month_avg_price,
+    avg(month_avg_price) OVER(
+        partition by
+            sm_id
+        ORDER BY
+            my_date rows between 3 preceding AND current row
+    ) AS revenue
+FROM
+    temp
+GROUP BY
+    sm_id,
+    my_date,
+    month_avg_price
+ORDER BY
+    sm_id, my_date,
+    month_avg_price
 
 /*markdown
 **23.** Рассчитать долю загрузки складов для каждого года – месяца.
 */
 
 /*markdown
-**Решение.** Будем работать так: sum(remains of 1 branchiD)/size of branch for every branch (group by year - month)
+**Решение.** Будем работать так: sum(remains of 1 branchiD)/size of branch for every branch (GROUP BY year - month)
 */
 
 SELECT
-    cast(sum(remains*ai.volume) as float)/sizeBranch as dolya, b.branchId
+    cast(sum(remains * ai.volume) AS float) / sizeBranch AS dolya,
+    b.branchId
 FROM
-     distributor.remains r INNER JOIN distributor.branch b on r.branchId=b.branchId
-     INNER JOIN distributor.attributesItem  ai on r.itemId=ai.itemId
+    distributor.remains r
+INNER JOIN
+    distributor.branch b
+    ON r.branchId=b.branchId
+INNER JOIN
+    distributor.attributesItem ai
+    ON r.itemId=ai.itemId
 WHERE
-    ai.volume is not null
+    ai.volume IS NOT null
 GROUP BY
     year(dateId),
     month(dateId),
@@ -641,37 +762,42 @@ GROUP BY
 /*markdown
 **Решение.** Думаю, что стоимость складских запасов в данном случае = себестоимость(DDP) * количество товара boxPacking (в разрезе, да) для каждого филиала.
   А во втором случае все то же самое, но надо юзать basePrice и просуммировать для всех филиалов
-  будем  юзать distributor.attributesItem INNER JOIN distributor.ddp on itemId
+  будем  юзать distributor.attributesItem INNER JOIN distributor.ddp ON itemId
 */
 
 SELECT
-    d.DDP * ai.boxPacking as sebestoimost
+    d.DDP * ai.boxPacking AS sebestoimost
 FROM
-    distributor.attributesItem ai INNER JOIN distributor.ddp d on d.itemId=ai.itemId
+    distributor.attributesItem ai
+INNER JOIN
+    distributor.ddp d
+    ON d.itemId=ai.itemId
 WHERE
     ai.boxPacking IS NOT NULL
-  AND
-    d.DDP IS NOT NULL
+    AND d.DDP IS NOT NULL
 GROUP BY
     yearId,
     monthId,
     d.DDP,
     ai.boxPacking
 
-with temp(sebestoimosti)  as
-    (SELECT
-        d.basePrice * ai.boxPacking as sebestoimost
+WITH temp(sebestoimosti)  AS (
+    SELECT
+        d.basePrice * ai.boxPacking AS sebestoimost
     FROM
-        distributor.attributesItem ai INNER JOIN distributor.ddp d on d.itemId=ai.itemId
+        distributor.attributesItem ai
+    INNER JOIN
+        distributor.ddp d
+        ON d.itemId=ai.itemId
     WHERE
         ai.boxPacking IS NOT NULL
-      AND
-        d.DDP IS NOT NULL
+        AND d.DDP IS NOT NULL
     GROUP BY
         yearId,
         monthId,
         d.basePrice,
-        ai.boxPacking)
+        ai.boxPacking
+)
 SELECT sum(sebestoimosti) FROM temp;
 
 /*markdown
@@ -680,12 +806,12 @@ SELECT sum(sebestoimosti) FROM temp;
 Будем делать рассчеты на основе таблицы singleSales(потому что там все что нужно:) ) из схемы distributor, db demo
 */
 
-DECLARE @year_sales as INT = (
+DECLARE @year_sales AS INT = (
     SELECT sum(sales)
     FROM distributor.singleSales ss
     WHERE category=N'Обои'
 )
-DECLARE @year_sales_rub as INT = (
+DECLARE @year_sales_rub AS INT = (
     SELECT sum(salesRub)
     FROM distributor.singleSales ss
     WHERE category=N'Обои'
@@ -693,8 +819,8 @@ DECLARE @year_sales_rub as INT = (
 PRINT @year_sales; -- 2708989
 PRINT @year_sales_rub; -- 1882817500
 SELECT
-    sum(sales)/@year_sales as month_koef_in_units,
-    sum(salesRub)/@year_sales_rub as month_koef_in_rub
+    sum(sales) / @year_sales AS month_koef_in_units,
+    sum(salesRub) / @year_sales_rub AS month_koef_in_rub
 FROM
     distributor.singleSales
 WHERE
@@ -710,35 +836,35 @@ GROUP BY
 */
 
 -- For the whole time
-with doli(dolya_item, fabrica) as (
+WITH doli(dolya_item, fabrica) AS (
     SELECT
-        sum(quantity) as dolya_item,
+        sum(quantity) AS dolya_item,
         fabrica
     FROM
         (
             SELECT
                 s.itemId,
-                count(s.itemId) as quantity,
+                count(s.itemId) AS quantity,
                 fabrica
             FROM
                 distributor.item i
             INNER JOIN
-                distributor.sales s on i.itemId = s.itemId
+                distributor.sales s ON i.itemId = s.itemId
             GROUP BY
                 fabrica,
                 s.itemId
-        ) as tmp
+        ) AS tmp
     GROUP BY fabrica
 )
 SELECT TOP(10)
-    cast(dolya_item as float) / cast(
+    cast(dolya_item AS float) / cast(
         (
             SELECT
                 sum(dolya_item)
-            from
+            FROM
                 doli
-        ) as float
-    ) as dolya,
+        ) AS float
+    ) AS dolya,
     fabrica
 FROM
     doli
@@ -747,66 +873,88 @@ GROUP BY
     fabrica
 
 -- This is for Year/Month
-with doli(dolya_item, fabrica, year, month) as (
-    SELECT sum(quantity) as dolya_item, fabrica, year, month
-             FROM (
-                      SELECT
-                             year(s.dateId) as year,
-                             month(s.dateId) as month,
-                             s.itemId,
-                             count(s.itemId) as quantity,
-                             fabrica
-                      FROM distributor.item i
-                             INNER JOIN distributor.sales s on i.itemId = s.itemId
-                      GROUP BY year(s.dateId), month(s.dateId), fabrica, s.itemId
-                  ) as tmp
-             GROUP BY year, month, fabrica
+WITH doli(dolya_item, fabrica, year, month) AS (
+    SELECT
+        sum(quantity) AS dolya_item,
+        fabrica,
+        year,
+        month
+    FROM
+        (
+            SELECT
+                year(s.dateId) AS year,
+                month(s.dateId) AS month,
+                s.itemId,
+                count(s.itemId) AS quantity,
+                fabrica
+            FROM
+                distributor.item i
+            INNER JOIN
+                distributor.sales s
+                ON i.itemId = s.itemId
+            GROUP BY
+                year(s.dateId),
+                month(s.dateId),
+                fabrica,
+                s.itemId
+        ) AS tmp
+    GROUP BY
+        year,
+        month,
+        fabrica
 )
 SELECT TOP(10)
-    cast(dolya_item as float) / cast(
-        (SELECT sum(dolya_item) from doli) as float
-        ) as dolya, fabrica
+    cast(dolya_item AS float) / cast(
+        (SELECT sum(dolya_item) FROM doli) AS float
+    ) AS dolya,
+    fabrica
 FROM
     doli
 GROUP BY
-    year, month, dolya_item, fabrica;
+    year,
+    month,
+    dolya_item,
+    fabrica;
 
 /*markdown
 **27.**
 */
 
-with temp1(month, sales) as (
+WITH temp1(month, sales) AS (
     SELECT
-        month(distributor.singleSales.dateId) as month,
+        month(distributor.singleSales.dateId) AS month,
         count(distributor.singleSales.itemId)
     FROM
         distributor.singleSales
     INNER JOIN
-        distributor.item i on singleSales.itemId = i.itemId
+        distributor.item i
+        ON singleSales.itemId = i.itemId
     WHERE
-        i.exclusive = 'Да' and
+        i.exclusive = 'Да' AND
         singleSales.category = 'Обои'
     GROUP BY
         year(distributor.singleSales.dateId),
         month(distributor.singleSales.dateId)
 ),
-temp2(month, sales) as (
+temp2(month, sales) AS (
     SELECT
         month(distributor.singleSales.dateId),
         count(distributor.singleSales.itemId)
     FROM
         distributor.singleSales
     INNER JOIN
-        distributor.item i on singleSales.itemId = i.itemId
+        distributor.item i
+        ON singleSales.itemId = i.itemId
     WHERE
         singleSales.category = 'Обои'
     GROUP BY
         year(distributor.singleSales.dateId),
         month(distributor.singleSales.dateId)
 )
-select TOP(5)
-    (cast(temp1.sales as float) / cast(temp2.sales as float)) as boom
+SELECT TOP(5)
+    (cast(temp1.sales AS float) / cast(temp2.sales AS float)) AS boom
 FROM
     temp1
 INNER JOIN
-    temp2 on temp1.month = temp2.month
+    temp2
+    ON temp1.month = temp2.month

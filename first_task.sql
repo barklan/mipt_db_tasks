@@ -11,8 +11,8 @@ SELECT TOP(10)
 FROM
     distributor.singleSales
 WHERE
-    branchName = 'Екатеринбург' and
-    dateId between '2011-05-29' and '2011-05-31'
+    branchName = 'Екатеринбург'
+    AND dateId BETWEEN '2011-05-29' AND '2011-05-31'
 
 /*markdown
 **2.**
@@ -31,8 +31,8 @@ FROM
 */
 
 SELECT
-    min(salesRub) as min,
-    max(salesRub) as max
+    min(salesRub) AS min,
+    max(salesRub) AS max
 FROM
     distributor.singleSales
 
@@ -54,7 +54,7 @@ WHERE
             distributor.singleSales
         WHERE
             month(dateId) = 2
-)
+    )
 
 /*markdown
 **5.**
@@ -83,12 +83,15 @@ b. Известно имя менеджера
 c. Известно название компании
 */
 
-SELECT *
+SELECT
+    *
 FROM
     [distributor].[singleSales]
 WHERE
-    branchName = 'Москва' AND dateId BETWEEN '2011-06-01'
-    AND '2011-06-30' AND fullname IS NOT NULL AND companyName IS NOT NULL
+    branchName = 'Москва'
+    AND dateId BETWEEN '2011-06-01' AND '2011-06-30'
+    AND fullname IS NOT NULL
+    AND companyName IS NOT NULL
 ORDER BY
     salesRub DESC
 
@@ -115,39 +118,52 @@ c. Известно название компании
 */
 
 
-SELECT *
+SELECT
+    *
 FROM
     [distributor].[singleSales]
 WHERE
-    branchName = 'Москва' AND dateId BETWEEN '2011-06-01' AND '2011-06-30' AND companyName
-    IS NOT NULL AND category = 'Сантехника'
+    branchName = 'Москва' 
+    AND dateId BETWEEN '2011-06-01' AND '2011-06-30'
+    AND companyName IS NOT NULL
+    AND category = 'Сантехника'
 ORDER BY
     sales DESC
 
 
-SELECT *
-FROM [distributor].[singleSales]
+SELECT
+    *
+FROM
+    [distributor].[singleSales]
 WHERE
     dateId BETWEEN '2011-02-01' AND '2011-08-01'
-    AND companyName IS NOT NULL AND fullname IS NOT NULL AND brand = 'Roca'
+    AND companyName IS NOT NULL
+    AND fullname IS NOT NULL
+    AND brand = 'Roca'
 ORDER BY
     fullname
 
-SELECT *
+SELECT
+    *
 FROM
     [distributor].[singleSales]
 WHERE
     dateId BETWEEN '2011-02-01' AND '2011-09-30'
-    AND fullname IS NOT NULL AND category LIKE '%Обои%' AND sales BETWEEN 5 AND 10
+    AND fullname IS NOT NULL
+    AND category LIKE '%Обои%'
+    AND sales BETWEEN 5 AND 10
 ORDER BY
-    fullname ASC, salesRub DES
+    fullname ASC,
+    salesRub DESC
 
-
-SELECT TOP(1) *
+SELECT TOP(1)
+    *
 FROM
     [distributor].[singleSales]
 WHERE
-    branchName = 'Самара' AND fullname IS NOT NULL AND companyName IS NOT NULL
+    branchName = 'Самара'
+    AND fullname IS NOT NULL
+    AND companyName IS NOT NULL
 ORDER BY
     salesRub DESC
 
@@ -156,18 +172,18 @@ ORDER BY
 */
 
 SELECT TOP(10)
-*
+    *
 FROM
     distributor.singleSales
 WHERE
-    region='Самарская область' and
-    salesRub = (
+    region='Самарская область'
+    AND salesRub = (
         SELECT
             MAX(salesRub)
         FROM
             distributor.singleSales
         WHERE
-            region='Самарская область'
+            region = 'Самарская область'
     )
 
 /*markdown
@@ -195,10 +211,10 @@ SELECT
 FROM
     [distributor].[singleSales]
 WHERE
-    category = 'Напольные покрытия' AND
-    sales > 5 AND
-    fullname IS NOT NULL AND
-    brand = 'Praktik'
+    category = 'Напольные покрытия'
+    AND sales > 5
+    AND fullname IS NOT NULL
+    AND brand = 'Praktik'
 
 /*markdown
 **14.** Посчитать количество уникальных менеджеров со следующими условиями
@@ -207,15 +223,25 @@ b. В фамилии присутствует сочетание букв «ов
 c. Количество продаж от 5 до 10
 */
 
-SELECT COUNT(DISTINCT fullname) AS [quantity]
-FROM [distributor].[singleSales]
-WHERE fullname LIKE '%ва%' OR fullname LIKE '%ов%' AND sales BETWEEN 5 AND 10 AND branchName = 'Новосибирск'
+SELECT
+    COUNT(DISTINCT fullname) AS [quantity]
+FROM
+    [distributor].[singleSales]
+WHERE
+    fullname LIKE '%ва%'
+    OR fullname LIKE '%ов%'
+    AND sales BETWEEN 5 AND 10
+    AND branchName = 'Новосибирск'
 
 -- Или по таблице менеджеров (при условии окончания фамилии на -ов, -ва):
 
-SELECT COUNT(DISTINCT surname) [quantity]
-FROM [distributor].[salesManager]
-WHERE surname LIKE '%ва' OR surname LIKE '%ов']
+SELECT
+    COUNT(DISTINCT surname) [quantity]
+FROM
+    [distributor].[salesManager]
+WHERE
+    surname LIKE '%ва'
+    OR surname LIKE '%ов'
 
 /*markdown
 **15.** Посчитать кол-во уникальных клиентов со следующими условиями
@@ -230,10 +256,10 @@ SELECT
 FROM
     [distributor].[singleSales]
 WHERE
-    sales > 10 AND
-    companyName LIKE 'ООО%' AND
-    region = 'Самарская область' AND
-    dateId > '2011-09-01'
+    sales > 10
+    AND companyName LIKE 'ООО%'
+    AND region = 'Самарская область'
+    AND dateId > '2011-09-01'
 
 /*markdown
 **16.** Сколько обслуживает клиентов каждый менеджер со следующими условиями
@@ -250,10 +276,10 @@ SELECT
 FROM
     [distributor].[singleSales]
 WHERE
-    sales > 10 AND
-    branchName = 'Москва' AND
-    fullname IS NOT NULL AND
-    companyName IS NOT NULL
+    sales > 10
+    AND branchName = 'Москва'
+    AND fullname IS NOT NULL
+    AND companyName IS NOT NULL
 GROUP BY
     fullname
 ORDER BY
@@ -265,7 +291,8 @@ ORDER BY
 
 SELECT
     branchName,
-    COUNT(DISTINCT companyName) / COUNT(DISTINCT fullname) AS [Среднее_количество_клиентов_на менеджера_филиала]
+    COUNT(DISTINCT companyName) / 
+    COUNT(DISTINCT fullname) AS [Среднее_количество_клиентов_на менеджера_филиала]
 FROM
     [distributor].[singleSales]
 WHERE
@@ -297,7 +324,8 @@ SELECT
 FROM
     distributor.sales
 INNER JOIN
-    distributor.branch on (sales.branchId = branch.branchId)
+    distributor.branch
+    ON (sales.branchId = branch.branchId)
 GROUP BY
     sales.branchId, branch.branchName
 
@@ -305,9 +333,9 @@ GROUP BY
 **20**. Какой менеджер обслужил в филиале, максимальное кол-во клиентов
 */
 
-WITH temp(managerId, checksSold) as (
+WITH temp(managerId, checksSold) AS (
     SELECT
-        salesManagerId, count(sales.checkId)
+        salesManagerId, COUNT(sales.checkId)
     FROM
         distributor.sales
     WHERE
@@ -323,7 +351,8 @@ SELECT
 FROM
     temp
 INNER JOIN
-    distributor.salesManager on (salesManager.salesManagerId = temp.managerId)
+    distributor.salesManager
+    ON (salesManager.salesManagerId = temp.managerId)
 WHERE
     checksSold = (
         SELECT
@@ -336,11 +365,11 @@ WHERE
 **v2**
 */
 
-WITH temp(branch, fullname, checks) as (
+WITH temp(branch, fullname, checks) AS (
     SELECT
         branchName
         fullname,
-        count(checkId)
+        COUNT(checkId)
     FROM
         distributor.singleSales
     WHERE
@@ -370,13 +399,13 @@ WHERE
 */
 
 SELECT TOP(10)
-    max(salesRub) as maxSalesRub,
+    max(salesRub) AS maxSalesRub,
     salesManagerId
 FROM
     distributor.sales
 WHERE
-    branchId = 4 AND
-    month(dateId) = 8
+    branchId = 4
+    AND month(dateId) = 8
 GROUP BY
     salesManagerId
 
@@ -390,22 +419,27 @@ SELECT TOP(10)
 FROM
     distributor.sales
 INNER JOIN
-    distributor.salesManager on (salesManager.salesManagerId = sales.salesManagerId)
+    distributor.salesManager
+    ON (salesManager.salesManagerId = sales.salesManagerId)
 GROUP BY
-    sales.salesManagerId, salesManager.surname
+    sales.salesManagerId,
+    salesManager.surname
 
 /*markdown
 **23**. Рассчитать средний чек клиента по филиалу
 */
 
 SELECT
-    avg(salesRub), branchName
+    avg(salesRub),
+    branchName
 FROM
     distributor.sales
 INNER JOIN
-    distributor.branch on (branch.branchId = sales.branchId)
+    distributor.branch
+    ON (branch.branchId = sales.branchId)
 GROUP BY
-    branch.branchId, branchName
+    branch.branchId,
+    branchName
 
 /*markdown
 **25.** Найти с помощью неточного поиска, следующие наименования компании
@@ -416,7 +450,7 @@ SELECT
 FROM
     distributor.company
 WHERE
-    companyName like 'ООО "БЕ%'
+    companyName LIKE 'ООО "БЕ%'
 
 /*markdown
 **26.** Из задачи прошлого найти средний чек, который он оставляет в компании
@@ -424,13 +458,14 @@ WHERE
 
 SELECT
     temp1.companyName,
-    round(avg(temp2.salesRub), 1) as 'avg'
+    round(avg(temp2.salesRub), 1) AS 'avg'
 FROM
     distributor.company temp1
 INNER JOIN
-    distributor.singleSales temp2 on (temp1.companyName = temp2.companyName)
+    distributor.singleSales temp2
+    ON (temp1.companyName = temp2.companyName)
 WHERE
-    temp1.companyName like 'ООО "Б%'
+    temp1.companyName LIKE 'ООО "Б%'
 GROUP BY
     temp1.companyName
 
@@ -439,17 +474,17 @@ GROUP BY
 */
 
 SELECT
-    avg(n) as average
+    avg(n) AS average
 FROM
     (
         SELECT
-            COUNT(itemId) as n,
+            COUNT(itemId) AS n,
             checkId
         FROM
             distributor.singleSales
         GROUP BY
             checkId
-    ) as s
+    ) AS s
 
 /*markdown
 **29.**
@@ -457,22 +492,22 @@ FROM
 
 SELECT
     a.companyName,
-    avg(n) as average
+    avg(n) AS average
 FROM
     (
         SELECT
-            COUNT(itemId) as n,
+            COUNT(itemId) AS n,
             checkId,
             companyName
         FROM
             distributor.singleSales
         WHERE
-            salesRub < 3000 and
+            salesRub < 3000 AND
             companyName IS NOT NULL
         GROUP BY
             checkId,
             companyName
-    ) as a
+    ) AS a
 GROUP BY
     a.companyName
 ORDER BY
@@ -484,14 +519,14 @@ ORDER BY
 
 SELECT
     fullname,
-    COUNT(companyName) as countc
+    COUNT(companyName) AS countc
 FROM
     distributor.singleSales
 GROUP BY
     fullname
 HAVING
-    COUNT(companyName) > 50 and
-    fullname IS NOT NULL
+    COUNT(companyName) > 50
+    AND fullname IS NOT NULL
 
 /*markdown
 **32.**
@@ -504,12 +539,15 @@ WITH sms(managerId, numberOfBranches) AS (
     FROM
         distributor.sales
     INNER JOIN
-        distributor.branch on (sales.branchId = branch.branchId)
+        distributor.branch
+        ON (sales.branchId = branch.branchId)
     INNER JOIN
-        distributor.salesManager as sm on (sales.salesManagerId = sm.salesManagerId)
+        distributor.salesManager AS sm
+        ON (sales.salesManagerId = sm.salesManagerId)
     GROUP BY
         sm.salesManagerId
-    HAVING COUNT(DISTINCT branch.branchId) > 1
+    HAVING
+        COUNT(DISTINCT branch.branchId) > 1
 )
 SELECT TOP(10)
     managerId,
@@ -519,7 +557,8 @@ SELECT TOP(10)
 FROM
     sms
 INNER JOIN
-    distributor.salesManager on (sms.managerId = salesManager.salesManagerId)
+    distributor.salesManager
+    ON (sms.managerId = salesManager.salesManagerId)
 
 /*markdown
 **33.**
@@ -527,7 +566,7 @@ INNER JOIN
 
 SELECT
     DISTINCT fullname,
-    floor(sum(salesRub * sales)) as summ
+    floor(sum(salesRub * sales)) AS summ
 FROM
     distributor.singleSales
 GROUP BY
@@ -539,7 +578,7 @@ HAVING
 **34.**
 */
 
-SELECT top(10)
+SELECT TOP(10)
     s.itemId,
     dateId,
     yearId,
@@ -547,7 +586,8 @@ SELECT top(10)
 FROM
     distributor.singleSales s
 JOIN
-    distributor.ddp a on s.itemId = a.itemId
+    distributor.ddp a
+    ON s.itemId = a.itemId
 GROUP BY
     s.itemId,
     dateId,
@@ -559,16 +599,16 @@ GROUP BY
 */
 
 SELECT
-    avg(n) as average
+    avg(n) AS average
 FROM
     (
         SELECT
-            COUNT(DISTINCT checkId) as n
+            COUNT(DISTINCT checkId) AS n
         FROM
             distributor.singleSales
-    ) as s
+    ) AS s
 SELECT
-    COUNT(itemId) as avgTxn
+    COUNT(itemId) AS avgTxn
 FROM
     distributor.singleSales
 
@@ -577,16 +617,16 @@ FROM
 */
 
 SELECT
-    COUNT(DISTINCT account) as accounts
+    COUNT(DISTINCT account) AS accounts
 FROM
     (
         SELECT
             checkId,
-            sum(sales * salesRub) as account
+            sum(sales * salesRub) AS account
         FROM
             distributor.singleSales
         GROUP BY
             checkId
         HAVING
             COUNT(sales) > 2
-    ) as s
+    ) AS s
