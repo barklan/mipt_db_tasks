@@ -220,8 +220,8 @@ SELECT TOP(5)
 FROM
     distributor.singleSales
 WHERE
-    companyName like '%ООО%' or
-    companyName like '%ооо%'
+    companyName like '%ООО%'
+    OR companyName like '%ооо%'
 
 /*markdown
 **9.** Найдите все компании, у которых в наименование в начале стоит «ООО», без учета регистра и пробелов вначале.
@@ -235,7 +235,7 @@ SELECT
 */
 
 SELECT
-    distinct TOP(5) fullname,
+    DISTINCT TOP(5) fullname,
     SUBSTRING(
         fullname,
         1,
@@ -958,3 +958,42 @@ FROM
 INNER JOIN
     temp2
     ON temp1.month = temp2.month
+
+/*markdown
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```
+Recursive CTE in your face
+*/
+
+WITH cte as (
+    SELECT 
+        2 AS n
+    UNION ALL
+    SELECT
+        n * 2
+    FROM
+        cte
+    WHERE
+        n < 100
+)
+SELECT
+    n
+FROM
+    cte
+OPTION 
+    (MAXRECURSION 32767)
