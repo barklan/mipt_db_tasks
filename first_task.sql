@@ -71,6 +71,22 @@ FROM
 **6.**
 */
 
+with temp(checkId, summ) as (
+    SELECT
+        sum(salesRub),
+        checkId
+    FROM
+        distributor.sales
+    GROUP BY
+        checkId
+)
+SELECT
+    count(summ)
+FROM
+    temp
+WHERE
+    summ >= 10000
+
 SELECT
     COUNT(DISTINCT checkId) AS checks
 FROM
@@ -306,15 +322,34 @@ GROUP BY
 **18.** Сколько в среднем обслуживает клиентов менеджер филиала.
 */
 
+with temp(fullname, numberOfCompanies) as (
+    SELECT
+        fullname,
+        count(distinct companyName)
+    FROM
+        distributor.singleSales
+    WHERE
+        branchName = 'Москва'
+        and fullname IS NOT NULL
+    GROUP BY
+        fullname
+)
 SELECT
-    region,
-    COUNT(DISTINCT checkId) / COUNT(DISTINCT fullname)
+    avg(numberOfCompanies)
+FROM
+    temp
+
+SELECT
+    avg()
+    companyName,
+    COUNT(DISTINCT companyName)
 FROM
     distributor.singleSales
 WHERE
     fullname IS NOT NULL
+    branchName = 'Москва'
 GROUP BY
-    region
+    fullname
 
 /*markdown
 **19.** Сколько всего клиентов обслужил филиал за определенный период.
@@ -415,6 +450,25 @@ GROUP BY
 **22**. Рассчитать средний чек клиенту по выбранному менеджеру
 */
 
+with temp(summ, name, checkId) as (
+    SELECT
+        sum(salesRub),
+        fullname,
+        checkId
+    FROM
+        distributor.singleSales
+    GROUP BY
+        fullname,
+        checkId
+)
+SELECT
+    avg(summ),
+    name
+FROM
+    temp
+GROUP BY
+    temp.name
+
 SELECT TOP(10)
     avg(salesRub),
     salesManager.surname
@@ -425,7 +479,10 @@ INNER JOIN
     ON (salesManager.salesManagerId = sales.salesManagerId)
 GROUP BY
     sales.salesManagerId,
-    salesManager.surname
+    salesManager.surname,
+    sales.checkId
+ORDER BY
+    surname
 
 /*markdown
 **23**. Рассчитать средний чек клиента по филиалу
@@ -452,7 +509,8 @@ SELECT
 FROM
     distributor.company
 WHERE
-    companyName LIKE 'ООО "БЕ%'
+    upper(companyName) LIKE 'ООО "БЕ%'
+    
 
 /*markdown
 **26.** Из задачи прошлого найти средний чек, который он оставляет в компании
@@ -499,7 +557,7 @@ FROM
     (
         SELECT
             COUNT(itemId) AS n,
-            checkId,
+            -- checkId,
             companyName
         FROM
             distributor.singleSales
@@ -601,14 +659,25 @@ GROUP BY
 */
 
 SELECT
+    count(DISTINCT checkId) AS n
+FROM
+    distributor.singleSales
+
+SELECT
+    count(itemId)
+FROM
+    distributor.singleSales
+
+SELECT
     avg(n) AS average
 FROM
     (
         SELECT
-            COUNT(DISTINCT checkId) AS n
+            avg(DISTINCT checkId) AS n
         FROM
             distributor.singleSales
-    ) AS s
+    ) AS s;
+
 SELECT
     COUNT(itemId) AS avgTxn
 FROM

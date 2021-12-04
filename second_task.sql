@@ -220,8 +220,8 @@ SELECT TOP(5)
 FROM
     distributor.singleSales
 WHERE
-    companyName like '%ООО%'
-    OR companyName like '%ооо%'
+    lower(companyName) like '%ооо%'
+    -- OR companyName like '%ооо%'
 
 /*markdown
 **9.** Найдите все компании, у которых в наименование в начале стоит «ООО», без учета регистра и пробелов вначале.
@@ -765,8 +765,21 @@ GROUP BY
   будем  юзать distributor.attributesItem INNER JOIN distributor.ddp ON itemId
 */
 
+SELECT 
+    count(itemId),
+    count(distinct itemId)
+FROM
+    distributor.attributesItem
+
+SELECT top(100)
+    *
+FROM
+    distributor.ddp
+
+
 SELECT
-    d.DDP * ai.boxPacking AS sebestoimost
+    count(*)
+    -- d.DDP * ai.boxPacking AS sebestoimost
 FROM
     distributor.attributesItem ai
 INNER JOIN
@@ -775,11 +788,11 @@ INNER JOIN
 WHERE
     ai.boxPacking IS NOT NULL
     AND d.DDP IS NOT NULL
-GROUP BY
-    yearId,
-    monthId,
-    d.DDP,
-    ai.boxPacking
+-- GROUP BY
+--     yearId,
+--     monthId,
+--     d.DDP,
+--     ai.boxPacking
 
 WITH temp(sebestoimosti)  AS (
     SELECT
