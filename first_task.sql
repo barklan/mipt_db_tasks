@@ -408,12 +408,6 @@ GROUP BY
     branch.branchId, branchName
 
 /*markdown
-**24**. Средний чек клиента по менеджерам внутри филиалов
-*/
-
--- TODO
-
-/*markdown
 **25.** Найти с помощью неточного поиска, следующие наименования компании
 */
 
@@ -439,46 +433,6 @@ WHERE
     temp1.companyName like 'ООО "Б%'
 GROUP BY
     temp1.companyName
-
-/*markdown
-**27.** Рассчитать АВС товарных позиций ( задача со звездочкой)
-*/
-
--- The fuck?
-with tmp as (
-    SELECT
-        categoriesAggregate.category,
-        categoriesAggregate.sumprod,
-        fullsum.sum_vseh,
-        (categoriesAggregate.sumprod / fullsum.sum_vseh) * 100 as pp
-    FROM
-        (
-            SELECT
-                tov.category,
-                sum(salesRub) as sumprod
-            FROM
-                distributor.sales prod
-            LEFT JOIN
-                distributor.item tov
-                on prod.itemId = tov.itemId
-            GROUP BY
-                tov.category
-        ) categoriesAggregate
-    CROSS JOIN
-        (
-            SELECT
-                sum(salesRub) as sum_vseh
-            FROM
-                distributor.sales
-        ) fullsum
-)
-SELECT
-    category,
-    summ = sum(pp) OVER(
-        ORDER BY
-            pp ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-    )
-from tmp
 
 /*markdown
 **28.**
